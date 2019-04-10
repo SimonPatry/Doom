@@ -1,4 +1,2 @@
-# Doom
-42 project Doom
-
-still working on it
+# Doom-Nukem
+Doom Nukem project from 42

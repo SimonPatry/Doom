@@ -3,39 +3,65 @@
 /*                                                        :::      ::::::::   */
 /*   ft_itoa.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lcordeno <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: lnicosia <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2018/11/12 13:40:31 by lcordeno          #+#    #+#             */
-/*   Updated: 2018/11/16 09:55:34 by lcordeno         ###   ########.fr       */
+/*   Created: 2018/11/09 13:20:20 by lnicosia          #+#    #+#             */
+/*   Updated: 2018/11/09 16:26:06 by lnicosia         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <stdlib.h>
 #include "libft.h"
 
-char	*ft_itoa(int n)
+static int	ft_get_size(int nbr)
 {
-	char			*s;
-	unsigned int	nb;
-	int				count;
-	int				sign;
+	int	size;
 
-	nb = n;
-	sign = 0;
-	count = ft_int_length(n);
-	if (!(s = (char*)malloc(sizeof(char) * count + 1)))
-		return (NULL);
-	s[count] = '\0';
-	if (n < 0)
+	size = 0;
+	if (nbr <= 0)
+		size++;
+	while (nbr != 0)
 	{
-		s[0] = '-';
-		nb = -n;
-		sign = 1;
+		nbr = nbr / 10;
+		size++;
 	}
-	while (count > sign)
+	return (size);
+}
+
+static char	*ft_fillstr(int size, int i, int nbr, char *str)
+{
+	while (size > i)
 	{
-		s[--count] = (nb % 10) + 48;
-		nb = nb / 10;
+		str[size - 1] = nbr % 10 + '0';
+		nbr = nbr / 10;
+		size--;
 	}
-	return (s);
+	return (str);
+}
+
+char		*ft_itoa(int nbr)
+{
+	int		i;
+	int		size;
+	char	*str;
+
+	i = 0;
+	size = 0;
+	size = ft_get_size(nbr);
+	if (!(str = ft_strnew(size)))
+		return (0);
+	if (nbr == -2147483648)
+	{
+		str[0] = '-';
+		str[1] = '2';
+		nbr = 147483648;
+		i = 2;
+	}
+	if (nbr < 0)
+	{
+		str[0] = '-';
+		i = 1;
+		nbr = -nbr;
+	}
+	str = ft_fillstr(size, i, nbr, str);
+	return (str);
 }

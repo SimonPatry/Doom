@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   ft_strsub.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lcordeno <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: lnicosia <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2018/11/11 15:17:01 by lcordeno          #+#    #+#             */
-/*   Updated: 2018/11/15 19:18:07 by lcordeno         ###   ########.fr       */
+/*   Created: 2018/11/08 17:00:47 by lnicosia          #+#    #+#             */
+/*   Updated: 2018/11/09 15:26:26 by lnicosia         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <stdlib.h>
+#include "libft.h"
 
 char	*ft_strsub(char const *s, unsigned int start, size_t len)
 {
@@ -18,13 +18,14 @@ char	*ft_strsub(char const *s, unsigned int start, size_t len)
 	size_t	i;
 
 	i = 0;
-	if (!s || !(str = malloc(len + 1)))
-		return (NULL);
-	while (i < len)
+	if (!s)
+		return (0);
+	if (!(str = ft_strnew(len)))
+		return (0);
+	while (s[start + i] && i < len)
 	{
 		str[i] = s[start + i];
 		i++;
 	}
-	str[i] = '\0';
 	return (str);
 }
