@@ -6,7 +6,7 @@
 /*   By: lnicosia <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/04/03 15:26:43 by lnicosia          #+#    #+#             */
-/*   Updated: 2019/04/10 12:07:19 by sipatry          ###   ########.fr       */
+/*   Updated: 2019/04/10 12:19:29 by sipatry          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,6 +88,6 @@ typedef struct	s_env
 void			free_all(t_env *env);
 void			clear_image(t_env *env);
 int				init_sdl(t_env *env);
-void			init_map(t_env *env);
+void			draw(t_env *env);
 
 #endif
