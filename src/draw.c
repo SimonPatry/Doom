@@ -3,60 +3,37 @@
 /*                                                        :::      ::::::::   */
 /*   draw.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lnicosia <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: sipatry <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2019/04/09 11:57:06 by lnicosia          #+#    #+#             */
-/*   Updated: 2019/04/10 12:21:07 by sipatry          ###   ########.fr       */
+/*   Created: 2019/06/20 15:50:14 by sipatry           #+#    #+#             */
+/*   Updated: 2019/06/26 16:34:32 by sipatry          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "utils.h"
-#include "draw.h"
 
-void	draw_line(t_line line, t_env *env)
+int	draw_game(t_env *env)
 {
-	while (line.start <= line.end)
-	{
-		env->sdl.img_str[line.x + env->w * line.start] = line.color;
-		line.start++;
-	}
-}
-
-void	render_sector(t_env *env, t_render render)
-{
-	int	i;
-	t_line		line;
-	t_sector	current;
-
-	(void)line;
-	i = 0;
-	current = env->sector[render.num];
-	while (i < current.nb_vertices)
-	{
-		// Deux options:
-		// 		-bisqwit way: calculer tous les murs
-		// 		-raycasting?
-
-		// tracer plafond
-		// tracer sol
-		// tracer mur
-		// if (voisin)
-		// 		if (plus haut) tracer marche
-		// 		if (plus bas) tracer corniche
-		// 		rendre secteur voisin
-		i++;
-	}
-}
-
-void	draw(t_env *env)
-{
-	t_render	render;
-	int			i;
-
-	i = 0;
-	render.num = env->player.sector;
-	render.x1 = 0;
-	render.x2 = env->w;
-	// On commence par rendre le secteur courant
-	render_sector(env, render);
+	SDL_GetRelativeMouseState(&env->sdl.mouse_x, &env->sdl.mouse_y);
+	if (env->options.show_minimap)
+		minimap(env);
+	if (draw(env) != 0)
+		return (crash("Render function failed\n", env));
+	if ((env->inputs.leftclick && !env->shot.on_going && !env->weapon_change.on_going) || env->shot.on_going)
+		weapon_animation(env, env->player.curr_weapon);
+	else
+		draw_weapon(env, env->weapons[env->player.curr_weapon].first_sprite);
+	if (env->weapon_change.on_going && !env->shot.on_going)
+		weapon_change(env);
+	draw_crosshair(env);
+	print_ammo(env);
+	if (env->options.show_fps)
+		fps(env);
+	if (env->options.test)
+		print_debug(env);
+	time(env);
+	animations(env);
+	update_screen(env);
+	view(env);
+	return (0);
 }

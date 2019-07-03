@@ -6,7 +6,7 @@
 /*   By: lnicosia <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/11/07 11:01:13 by lnicosia          #+#    #+#             */
-/*   Updated: 2019/03/08 11:01:42 by lnicosia         ###   ########.fr       */
+/*   Updated: 2019/05/19 17:58:35 by lnicosia         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,6 +61,7 @@ void			*ft_memset(void *b, int c, size_t len);
 int				ft_tolower(int c);
 int				ft_toupper(int c);
 int				ft_atoi(const char *str);
+double			ft_atof(const char *str);
 int				ft_strncmp(const char *s1, const char *s2, size_t n);
 char			*ft_strncpy(char *dst, char const *src, size_t len);
 int				ft_strcmp(const char *s1, const char *s2);
@@ -81,6 +82,7 @@ void			ft_putstr_fd(char const *s, int fd);
 void			ft_putendl_fd(char const *s, int fd);
 void			ft_putnbr_fd(int n, int fd);
 char			*ft_itoa(int nbr);
+char			*ft_sitoa(int nbr);
 t_list			*ft_lstnew(void const *content, size_t content_size);
 void			ft_lstdelone(t_list **alst, void (*del)(void*, size_t));
 void			ft_lstdel(t_list **alst, void (*del)(void *, size_t));
@@ -91,6 +93,7 @@ int				ft_lstlen(t_list *lst);
 void			ft_lstpushback(t_list **alst, t_list *new);
 int				ft_abs(int	nb);
 int				ft_clamp(int nb, int min, int max);
+double				ft_fclamp(double nb, double min, double max);
 int				ft_min(int nb1, int nb2);
 int				ft_max(int nb1, int nb2);
 double			ft_fabs(double nb);
@@ -103,5 +106,6 @@ int				ft_count(int nb);
 int				ft_atoi_base(char *str, char *base);
 int				ft_dprintf(int fd, const char *restrict format, ...);
 int				ft_printf(const char *restrict format, ...);
+size_t			ft_getlen(long nb);
 
 #endif
