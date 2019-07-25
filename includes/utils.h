@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utils.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
+/*   By: lnicosia <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2019/04/03 15:26:43 by lnicosia          #+#    #+#             */
-/*   Updated: 2019/07/03 15:07:22 by lnicosia         ###   ########.fr       */
+/*   Created: 2019/07/15 20:54:27 by lnicosia          #+#    #+#             */
+/*   Updated: 2019/07/25 10:09:10 by lnicosia         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,20 +17,23 @@
 # include <SDL_ttf.h>
 # include <SDL_mixer.h>
 # include <fcntl.h>
+# include <pthread.h>
 # include "libft.h"
-# include "object_types.h"
 # define X1 env->vertices[env->sectors[env->player.sector].vertices[i]].x
 # define X2 env->vertices[env->sectors[env->player.sector].vertices[i + 1]].x
 # define Y1 env->vertices[env->sectors[env->player.sector].vertices[i]].y
 # define Y2 env->vertices[env->sectors[env->player.sector].vertices[i + 1]].y
 # define PLAYER_XPOS env->player.pos.x
 # define PLAYER_YPOS env->player.pos.y
-# define MAX_TEXTURE 35
+# define MAX_TEXTURE 38
 # define CONVERT_RADIANS 0.0174532925199432955
 # define CONVERT_DEGREES 57.2957795130823228647
 # define MAX_SPRITES 2
 # define NB_WEAPONS 2
-# define NB_BUTTON 6
+# define NB_BUTTON 10
+# define AMMO_HUD 36
+# define ARMOR_LIFE_HUD 35
+# define THREADS 4
 
 typedef struct		s_point
 {
@@ -81,6 +84,7 @@ typedef struct		s_sector
 	double			ceiling_min;
 	double			floor_max;
 	double			ceiling_max;
+	double			light;
 	double			*wall_width;
 	double			*floors;
 	double			*ceilings;
@@ -131,8 +135,11 @@ typedef struct		s_player
 	short			camera_sector;
 	short			near_left_sector;
 	short			near_right_sector;
-	int				state;
+	double			state;
 	int				curr_weapon;
+	int				life;
+	int				armor;
+	double			head_z;
 }					t_player;
 
 /*
@@ -205,6 +212,7 @@ typedef struct		s_inputs
 	uint8_t			up;
 	uint8_t			down;
 	uint8_t			left_click;
+	uint8_t			right_click;
 	uint8_t			leftclick;
 	uint8_t			option;
 }					t_inputs;
@@ -283,9 +291,11 @@ typedef struct		s_object
 	t_v3			pos;
 	t_v3			translated_pos;
 	t_v3			rotated_pos;
+	int				seen;
 	int				sprite;
 	double			scale;
 	double			angle;
+	double			light;
 	int				pickable;
 	int				solid;
 	int				ammo;
@@ -303,12 +313,9 @@ typedef struct		s_sdl
 	t_fonts			fonts;
 	SDL_Window		*window;
 	SDL_Renderer	*renderer;
-	SDL_Surface		*surface;
 	SDL_Texture		*texture;
 	unsigned int	*img_str;
 	Uint32			*texture_pixels;
-	SDL_Surface		*image;
-	unsigned int	*image_str;
 	int				mouse_x;
 	int				mouse_y;
 	int				mx;
@@ -391,8 +398,9 @@ typedef struct		s_animation
 	double			start;
 	double			end;
 	double			on_going;
+	double			height;
+	double			tick;
 	double			nb_frame;
-	double			a_time;
 }					t_animation;
 
 
@@ -408,182 +416,5 @@ typedef struct		s_menu
 	int				index;
 	int				id;
 }					t_menu;
-
-/*
-**	Environment data struct
-*/
-
-typedef struct		s_env
-{
-	t_sdl			sdl;
-	t_player		player;
-	t_options		options;
-	t_keys			keys;
-	t_inputs		inputs;
-	t_camera		camera;
-	t_time			time;
-	t_animation		jump;
-	t_animation		squat;
-	t_gravity		gravity;
-	t_animation		shot;
-	t_animation		weapon_change;
-	t_vertex		*vertices;
-	t_sector		*sectors;
-	t_object		*objects;
-	t_sprite		*sprites;
-	t_audio			sound;
-	t_texture		textures[MAX_TEXTURE];
-	t_v2			*screen_pos;
-	t_weapons		weapons[NB_WEAPONS];
-	t_menu			button[NB_BUTTON];
-	int				option;
-	int				menu_start;
-	int				aplicate_changes;
-	char			*fps;
-	double			*depth_array;
-	int				horizon;
-	int				*xmin;
-	int				*xmax;
-	int				*screen_sectors;
-	int				screen_sectors_size;
-	short			*rendered_sectors;
-	int				screen_w[3];
-	int				screen_h[3];
-	char			**res;
-	int				w;
-	int				h;
-	int				i;
-	int				running;
-	int				nb_sectors;
-	int				nb_vertices;
-	int				nb_objects;
-	int				flag;
-	int				ac1;
-	char			**av1;
-	int				reset;
-}					t_env;
-
-/*
-**	  -------------
-**	 ---------------
-**	----FUNCTIONS----
-**	 ---------------
-**	  -------------
-*/
-
-/*
-** Main functions
-*/
-
-int					init_program(int ac, char **av);
-int					doom(t_env *env);
-void				free_all(t_env *env);
-int					crash(char *str, t_env *env);
-
-/*
-** Init functions
-*/
-
-int					init_screen_size(t_env *env, int i);
-void    			init_weapons(t_env *env);
-int     			init_sound(t_env *env);
-void				init_animations(t_env *env);
-void				init_pointers(t_env *env);
-int					init_sdl(t_env *env);
-int					init_ttf(t_env *env);
-int					init_textures(t_env *env);
-int					init_wallpapers_and_buttons(t_env *env);
-int					init_sprites(t_env *env);
-int					init_screen_pos(t_env *env);
-void				init_options(t_env *env);
-void				init_keys(t_env *env);
-void				init_inputs(t_env *env);
-void				init_camera(t_env *env);
-void				set_camera(t_env *env);
-int					valid_map(t_env *env);
-
-/*
-**	Parser functions
-*/
-
-int					parse_bmp(char *file, int index, t_env *env);
-int					parse_map(char *file, t_env *env);
-char				*skip_number(char *line);
-char				*skip_spaces(char *line);
-
-/*
-** Screen utils
-*/
-
-void				clear_image(t_env *env);
-void				update_screen(t_env *env);
-t_printable_text	new_printable_text(
-		char *text,
-		TTF_Font *font,
-		unsigned int color,
-		int size);
-void				print_text(t_point pos,
-		t_printable_text text, t_env *env);
-void				apply_surface(SDL_Surface *surface,
-		t_point pos, t_point size, t_env *env);
-void				fps(t_env *e);
-void				print_debug(t_env *env);
-void				fill_triangle(t_v3 v[3], t_env *env);
-unsigned int		blend_alpha(unsigned int src,
-		unsigned int dest, uint8_t alpha);
-unsigned int		blend_add(unsigned int src,
-		unsigned int dest, uint8_t alpha);
-unsigned int		blend_mul(unsigned int src, unsigned int dest);
-void				draw_line_3(t_env *env, t_line line);
-void				draw_line(t_point c1, t_point c2, t_env env, Uint32 color);
-Uint32				apply_light(Uint32 color, uint8_t light);
-void				free_all_sdl_relative(t_env *env);
-
-/*
-** Main pipeline functions
-*/
-
-int					draw(t_env *env);
-int					draw_game(t_env *env);
-void				check_parsing(t_env *env);
-void				options(t_env *env);
-void				minimap(t_env *e);
-void				view(t_env *env);
-void				reset_clipped(t_env *env);
-
-void				draw_weapon(t_env *env, int sprite);
-void				weapon_animation(t_env *env, int sprite);
-void				weapon_change(t_env *env);
-void				print_ammo(t_env *env);
-
-t_point				new_point(int x, int y);
-t_v2				new_v2(double x, double y);
-t_v3				new_v3(double x, double y, double z);
-
-void				precompute_slopes(t_env *env);
-double				get_clipped_floor(int num, t_sector sector,
-		t_vertex vertex, t_env *env);
-double				get_clipped_ceiling(int num, t_sector sector,
-		t_vertex vertex, t_env *env);
-void				draw_axes(t_env *env);
-void				draw_crosshair(t_env *env);
-void				update_inputs(t_env *env);
-void				move_player(t_env *env);
-void				update_camera_position(t_env *env);
-int					get_sector(t_env *env, t_v2 p);
-void				keys(t_env *env);
-void				update_player_z(t_env *env);
-void				update_floor(t_env *env);
-void				update_sector_slope(t_env *env, short sector_nb);
-void				time(t_env *env);
-void				gravity(t_env *env);
-void				animations(t_env *env);
-void				fall(t_env *env);
-void				jump(t_env *env);
-void				squat(t_env *env);
-int					open_options(t_env *env);
-void				add_image(t_env *env, int i, int x, int y);
-void				start_menu(t_env *env);
-void				add_button(t_env *env, int text, int x, int y, int ref_but);
 
 #endif

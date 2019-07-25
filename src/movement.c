@@ -6,11 +6,11 @@
 /*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/04/12 10:19:13 by lnicosia          #+#    #+#             */
-/*   Updated: 2019/06/17 16:59:50 by sipatry          ###   ########.fr       */
+/*   Updated: 2019/07/24 15:03:09 by sipatry          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "utils.h"
+#include "env.h"
 #include "collision.h"
 
 /*
@@ -43,6 +43,20 @@ int		get_sector(t_env *env, t_v2 p)
 	return (-1);
 }
 
+int		get_sector_global(t_env *env, t_v2 p)
+{
+	int		i;
+
+	i = 0;
+	while (i < env->nb_sectors)
+	{
+		if (is_in_sector(env, i, p.x, p.y))
+			return (i);
+		i++;
+	}
+	return (-1);
+}
+
 /*
  **	Update camera's position (save some computings)
  */
@@ -64,8 +78,8 @@ void	animations(t_env *env)
 		gravity(env);
 	if (((env->inputs.space && !env->player.state) || env->jump.on_going))
 		jump(env);
-	if (((env->inputs.ctrl && !env->player.state) || env->squat.on_going) && !env->jump.on_going)
-		squat(env);
+	if (((env->inputs.ctrl && !env->player.state && env->player.eyesight == 6) || env->crouch.on_going) && !env->jump.on_going)
+		crouch(env);
 }
 
 /*

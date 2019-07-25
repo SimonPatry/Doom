@@ -6,11 +6,11 @@
 /*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/05/29 15:30:20 by lnicosia          #+#    #+#             */
-/*   Updated: 2019/07/03 14:43:17 by lnicosia         ###   ########.fr       */
+/*   Updated: 2019/07/24 15:00:18 by sipatry          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "utils.h"
+#include "env.h"
 
 int		init_shotgun(t_env *env)
 {
@@ -88,6 +88,8 @@ int		init_textures(t_env *env)
 		return (ft_printf("Failed to load sprite sheet\n"));
 	if (parse_bmp("images/lost_soul.bmp", 34, env))
 		return (ft_printf("Failed to load sprite sheet\n"));
+	if (parse_bmp("images/rust.bmp", 37, env))
+		return (ft_printf("Failed to load sprite sheet\n"));
 	return (0);
 }
 
@@ -103,5 +105,9 @@ int		init_wallpapers_and_buttons(t_env *env)
 		return (ft_printf("invalid bmp file\n"));
 	if (parse_bmp("images/menu.bmp", 32, env))
 		return (ft_printf("invalid bmp file\n"));
+	if (parse_bmp("images/HUD/Ammo_hud.bmp", 36, env))
+		return (ft_printf("Invalid bmp file\n"));
+	if (parse_bmp("images/HUD/Life_armor_hud.bmp", 35, env))
+		return (ft_printf("Invalid bmp file\n"));
 	return (0);
 }

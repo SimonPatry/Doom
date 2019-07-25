@@ -6,11 +6,11 @@
 /*   By: aherriau <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/04/11 17:56:00 by aherriau          #+#    #+#             */
-/*   Updated: 2019/07/03 12:08:26 by lnicosia         ###   ########.fr       */
+/*   Updated: 2019/07/24 15:03:02 by sipatry          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "utils.h"
+#include "env.h"
 
 static void	swap_value(int *a, int *b)
 {
@@ -282,8 +282,8 @@ void		minimap(t_env *env)
 	{
 		sect = env->sectors[s];
 		v = 0;
-		if (env->player.pos.z > sect.floor_min
-				&& env->player.pos.z < sect.ceiling_max)
+		if (env->player.head_z > sect.floor_min
+				&& env->player.head_z < sect.ceiling_max)
 		{
 			if (s == env->player.sector)
 				line.color = 0xFF00FF00;

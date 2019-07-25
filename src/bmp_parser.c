@@ -6,11 +6,11 @@
 /*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/04/30 11:47:52 by lnicosia          #+#    #+#             */
-/*   Updated: 2019/07/03 14:35:23 by lnicosia         ###   ########.fr       */
+/*   Updated: 2019/07/24 14:55:15 by sipatry          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "utils.h"
+#include "env.h"
 #include "bmp_parser.h"
 
 /*
@@ -41,8 +41,6 @@ static int	parse(int fd, int index, t_env *env)
 					parser.bpp,
 					SDL_PIXELFORMAT_ARGB8888)))
 		return (ft_printf("SDL_CreateRGBSurface error: %s\n", SDL_GetError()));
-	/*if (!(env->sdl.image_str = (Uint32*)malloc(sizeof(Uint32) * parser.w * parser.h)))
-		return (ft_printf("Could not malloc image pixels\n"));*/
 	env->textures[index].str = env->textures[index].surface->pixels;
 	env->textures[index].scale = 1;
 	env->textures[index].xpadding = 0;

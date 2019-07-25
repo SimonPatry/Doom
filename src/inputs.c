@@ -6,11 +6,11 @@
 /*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/04/24 14:33:55 by lnicosia          #+#    #+#             */
-/*   Updated: 2019/07/03 14:51:19 by lnicosia         ###   ########.fr       */
+/*   Updated: 2019/07/25 11:06:14 by sipatry          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "utils.h"
+#include "env.h"
 
 void	init_inputs(t_env *env)
 {
@@ -83,42 +83,9 @@ void	set_inputs(t_env *env, int mode)
 	if (env->sdl.event.key.keysym.sym == env->keys.option)
 		env->inputs.option = mode;
 	if (env->sdl.event.button.button == SDL_BUTTON_LEFT)
-		env->inputs.leftclick = mode;
-	if (env->sdl.event.button.button == SDL_BUTTON_RIGHT && mode == 1 && !env->option)
-	{
-		if (env->weapons[env->player.curr_weapon].ammo < env->weapons[env->player.curr_weapon].max_ammo)
-			env->weapons[env->player.curr_weapon].ammo++;
-	}
-	if (env->sdl.event.button.button == SDL_BUTTON_LEFT && env->option)
-	{
-		env->inputs.left_click  = env->inputs.left_click ? 0 : 1;
-		if (env->inputs.left_click
-			&& button_leftclick(env, 2)
-			&& env->i > 0)
-			env->i--;
-		else if (env->inputs.left_click
-			&& button_leftclick(env, 3)
-			&& env->i < 2)
-			env->i++;
-		else if (env->inputs.left_click
-			&& button_leftclick(env, 4)
-			&& env->sound.g_music > 5)
-			env->sound.g_music -= 5;
-		else if (env->inputs.left_click
-			&& button_leftclick(env, 5)
-			&& env->sound.g_music < 100)
-			env->sound.g_music += 5;
-		else if (env->inputs.left_click
-			&& button_leftclick(env, 1))
-			env->aplicate_changes = 1;
-	}
-	if (env->sdl.event.button.button == SDL_BUTTON_LEFT
-	&& env->menu_start
-	&& button_leftclick(env, 0))
-	{
-		env->menu_start = 0;
-		SDL_SetRelativeMouseMode(1);
-	}
+		env->inputs.left_click = mode;
+	if (env->sdl.event.button.button == SDL_BUTTON_RIGHT)
+		env->inputs.right_click = mode;
 }
 
 void	update_inputs(t_env *env)
@@ -132,8 +99,6 @@ void	update_inputs(t_env *env)
 	}
 	if (env->sdl.event.type == SDL_MOUSEBUTTONDOWN)
 		set_inputs(env, 1);
- 	if (env->sdl.event.type == SDL_MOUSEBUTTONUP)
+	if (env->sdl.event.type == SDL_MOUSEBUTTONUP)
 		set_inputs(env, 0);
-	if (env->sdl.event.type == SDL_MOUSEWHEEL && !env->weapon_change.on_going && !env->shot.on_going)
-		weapon_change(env);
 }
