@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   draw.c                                             :+:      :+:    :+:   */
+/*   draw_game.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sipatry <marvin@42.fr>                     +#+  +:+       +#+        */
+/*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/06/20 15:50:14 by sipatry           #+#    #+#             */
-/*   Updated: 2019/07/24 14:56:31 by sipatry          ###   ########.fr       */
+/*   Updated: 2019/09/04 10:51:04 by lnicosia         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,11 +15,14 @@
 int	draw_game(t_env *env)
 {
 	SDL_GetRelativeMouseState(&env->sdl.mouse_x, &env->sdl.mouse_y);
-	if (draw_walls(env) != 0)
-		return (crash("Render function failed\n", env));
+	if (draw_walls(env))
+		return (crash("Failed to draw walls\n", env));
 	if (env->options.wall_color)
-		draw_sprites(env);
-	if ((env->inputs.leftclick && !env->shot.on_going && !env->weapon_change.on_going) || env->shot.on_going)
+	{
+		draw_objects(env);
+		draw_enemies(env);
+	}
+	if ((env->inputs.left_click && !env->shot.on_going && !env->weapon_change.on_going) || env->shot.on_going)
 		weapon_animation(env, env->player.curr_weapon);
 	else
 		draw_weapon(env, env->weapons[env->player.curr_weapon].first_sprite);
@@ -36,7 +39,12 @@ int	draw_game(t_env *env)
 	game_time(env);
 	animations(env);
 	draw_hud(env);
-	update_screen(env);
+	if (env->player.hit)
+		damage_anim(env);
+	if (env->options.zbuffer)
+		update_screen_zbuffer(env);
+	else
+		update_screen(env);
 	view(env);
 	return (0);
 }

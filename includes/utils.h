@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utils.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lnicosia <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 20:54:27 by lnicosia          #+#    #+#             */
-/*   Updated: 2019/07/25 10:09:10 by lnicosia         ###   ########.fr       */
+/*   Updated: 2019/09/04 17:50:03 by sipatry          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,25 +34,8 @@
 # define AMMO_HUD 36
 # define ARMOR_LIFE_HUD 35
 # define THREADS 4
-
-typedef struct		s_point
-{
-	int				x;
-	int				y;
-}					t_point;
-
-typedef struct		s_v2
-{
-	double			x;
-	double			y;
-}					t_v2;
-
-typedef struct		s_v3
-{
-	double			x;
-	double			y;
-	double			z;
-}					t_v3;
+# define MAX_W 2560
+# define MAX_H 1440
 
 typedef struct		s_line_eq
 {
@@ -67,6 +50,14 @@ typedef struct		s_line
 	Uint32			color;
 }					t_line;
 
+typedef struct		s_circle
+{
+	Uint32			line_color;
+	Uint32			color;
+	t_point			center;
+	int				radius;
+}					t_circle;
+
 /*
 ** VERTICES = PLURIEL DE VERTEX
 */
@@ -74,7 +65,6 @@ typedef struct		s_line
 typedef struct		s_sector
 {
 	t_v2			normal;
-	t_v3			boundaries[4];
 	double			floor;
 	double			floor_slope;
 	double			ceiling;
@@ -116,6 +106,8 @@ typedef struct		s_player
 	t_v3			pos;
 	t_v2			near_left;
 	t_v2			near_right;
+	int				stuck;
+	int				prev_sector;
 	double			gravity;
 	double			eyesight;
 	double			angle;
@@ -127,15 +119,14 @@ typedef struct		s_player
 	double			angle_z_cos;
 	double			angle_z_sin;
 	double			speed;
+	int				hit;
 	double			size_2d;
 	double			camera_x;
 	double			camera_y;
 	double			rotation_speed;
 	short			sector;
-	short			camera_sector;
-	short			near_left_sector;
-	short			near_right_sector;
 	double			state;
+	int				highest_sect;
 	int				curr_weapon;
 	int				life;
 	int				armor;
@@ -178,6 +169,7 @@ typedef struct		s_keys
 {
 	int				forward;
 	int				backward;
+	int				backspace;
 	int				left;
 	int				right;
 	int				forward2;
@@ -192,6 +184,10 @@ typedef struct		s_keys
 	int				down;
 	int				up;
 	int				option;
+	int				enter;
+	int				s;
+	int				del;
+	int				tab;
 }					t_keys;
 
 /*
@@ -202,6 +198,7 @@ typedef struct		s_inputs
 {
 	uint8_t			forward;
 	uint8_t			backward;
+	uint8_t			backspace;
 	uint8_t			left;
 	uint8_t			right;
 	uint8_t			plus;
@@ -213,8 +210,11 @@ typedef struct		s_inputs
 	uint8_t			down;
 	uint8_t			left_click;
 	uint8_t			right_click;
-	uint8_t			leftclick;
 	uint8_t			option;
+	uint8_t			enter;
+	uint8_t			s;
+	uint8_t			del;
+	uint8_t			tab;
 }					t_inputs;
 
 /*
@@ -229,6 +229,8 @@ typedef struct		s_fonts
 	TTF_Font		*alice30;
 	TTF_Font		*alice70;
 	TTF_Font		*bebasneue;
+	TTF_Font		*montserrat20;
+	TTF_Font		*playfair_display20;
 }					t_fonts;
 
 /*
@@ -248,6 +250,38 @@ typedef struct		s_audio
 }					t_audio;
 
 /*
+**	Contains every data needed for an animation on the screen
+*/
+
+typedef struct		s_time
+{
+	double			start;
+	double			end;
+	double			minuts;
+	double			tenth_s;
+	double			milli_s;
+}					t_time;
+
+typedef struct		s_gravity
+{
+	double			start;
+	double			end;
+	double			floor;
+	double			weight;
+	double			on_going;
+}					t_gravity;
+
+typedef struct		s_animation
+{
+	double			start;
+	double			end;
+	double			on_going;
+	double			height;
+	double			tick;
+	double			nb_frame;
+}					t_animation;
+
+/*
 ** Weapon structure
 */
 
@@ -258,9 +292,11 @@ typedef struct		s_weapons
 	int				nb_sprites;
 	int				weapon_switch;
 	int				ammo;
+	double			range;
 	int				no_ammo;
 	int				max_ammo;
 	int				damage;
+	int				splash;
 	Mix_Chunk		*sound;
 	Mix_Chunk		*empty;
 }					t_weapons;
@@ -278,6 +314,7 @@ typedef struct		s_sprite
 	t_point			end[8];
 	t_point			size[8];
 	int				reversed[8];
+	int				death_counterpart;
 	double			width;
 	double			height;
 }					t_sprite;
@@ -291,7 +328,10 @@ typedef struct		s_object
 	t_v3			pos;
 	t_v3			translated_pos;
 	t_v3			rotated_pos;
-	int				seen;
+	int				left;
+	int				right;
+	int				top;
+	int				bottom;
 	int				sprite;
 	double			scale;
 	double			angle;
@@ -301,7 +341,33 @@ typedef struct		s_object
 	int				ammo;
 	int				health;
 	int				sector;
+	int				exists;
+	int				num;
+	t_animation		death;
 }					t_object;
+
+typedef struct		s_enemies
+{
+	t_v3			pos;
+	t_v3			translated_pos;
+	t_v3			rotated_pos;
+	float			speed;
+	int				left;
+	int				right;
+	int				top;
+	int				bottom;
+	int				sprite;
+	int				death_sprite;
+	double			scale;
+	double			angle;
+	double			light;
+	int				health;
+	int				damage;
+	int				exists;
+	int				sector;
+	int				num;
+	t_animation		death;
+}					t_enemies;
 
 /*
 ** SDL data necessities
@@ -357,6 +423,7 @@ typedef struct		s_options
 	int				test;
 	int				clipping;
 	int				show_ennemies;
+	int				zbuffer;
 }					t_options;
 
 /*
@@ -372,39 +439,6 @@ typedef struct		s_printable_text
 }					t_printable_text;
 
 /*
-**	Contains every data needed for an animation on the screen
-*/
-
-typedef struct		s_time
-{
-	double			start;
-	double			end;
-	double			minuts;
-	double			tenth_s;
-	double			milli_s;
-}					t_time;
-
-typedef struct		s_gravity
-{
-	double			start;
-	double			end;
-	double			floor;
-	double			weight;
-	double			on_going;
-}					t_gravity;
-
-typedef struct		s_animation
-{
-	double			start;
-	double			end;
-	double			on_going;
-	double			height;
-	double			tick;
-	double			nb_frame;
-}					t_animation;
-
-
-/*
  **	Data to manipulate menus
  */
 
@@ -416,5 +450,47 @@ typedef struct		s_menu
 	int				index;
 	int				id;
 }					t_menu;
+
+/*
+**	Data for rectangle
+*/
+
+typedef struct		s_rectangle
+{
+	Uint32			line_color;
+	Uint32			inside_color;
+	int				filled;
+	int				line_size;
+}					t_rectangle;
+
+/*
+**	Data for button
+*/
+
+typedef struct		s_button
+{
+	t_rectangle		up;
+	t_rectangle		pressed;
+	t_rectangle		down;
+	t_point			pos;
+	t_point			size;
+	int				state;
+}					t_button;
+
+/*
+**	Data for confirmation box
+*/
+
+typedef struct		s_confirmation_box
+{
+	t_button		yes;
+	t_button		no;
+	TTF_Font		*font;
+	t_point			size;
+	int				state;
+	char			*str;
+	int				yes_pressed;
+	int				no_pressed;
+}					t_confirmation_box;
 
 #endif

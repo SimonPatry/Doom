@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   raycasting.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lnicosia <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 21:21:31 by lnicosia          #+#    #+#             */
-/*   Updated: 2019/07/24 15:03:45 by sipatry          ###   ########.fr       */
+/*   Updated: 2019/08/28 14:29:25 by gaerhard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,17 +41,22 @@ void	*raycasting(void *param)
 		render.texel.y = ((1.0 - render.alpha) * render.y1z1 + render.alpha * render.y2z2) * render.z;
 		// Calculer y actuel du plafond et du sol
 		render.max_ceiling = render.clipped_alpha * render.ceil_range + render.ceiling1;
-		//render.current_ceiling = ft_clamp(render.max_ceiling, render.ymin, render.ymax);
+		//render.current_ceiling = ft_clamp(render.max_ceiling, 0, env->h - 1);
 		render.current_ceiling = ft_clamp(render.max_ceiling, env->ymin[x], env->ymax[x]);
 		render.max_floor = render.clipped_alpha * render.floor_range + render.floor1;
 		render.line_height = render.max_floor - render.max_ceiling;
-		//render.current_floor = ft_clamp(render.max_floor, render.ymin, render.ymax);
+		//render.current_floor = ft_clamp(render.max_floor, 0, env->h - 1);
 		render.current_floor = ft_clamp(render.max_floor, env->ymin[x], env->ymax[x]);
-		render.ceiling_horizon = render.max_ceiling - render.horizon;
-		render.floor_horizon = render.max_floor - render.horizon;
+		//render.floor_horizon = render.alpha * render.floor_horizon_range + render.floor_horizon1;
+		render.ceiling_start = render.max_ceiling - render.ceiling_horizon;
+		render.floor_start = render.max_floor - render.floor_horizon;
+		/*render.ceiling_start = render.max_ceiling - render.horizon;
+		render.floor_start = render.max_floor - render.horizon;*/
 		vline.start = render.current_ceiling;
 		vline.end = render.current_floor;
 		vline.x = x;
+		vline.color = 0xFF222222;
+		vline.color = 0xFFFF0000;
 		// Dessiner le plafond de ymin jusqu'au plafond
 		if (render.current_ceiling > 0)
 			draw_ceiling(render, env);
@@ -77,8 +82,27 @@ void	*raycasting(void *param)
 					env->ymax[x]);
 		}
 		else
+		{
 			draw_vline(vline, render, env);
+			if ((env->options.zbuffer || env->options.contouring)
+					&& (x == (int)render.preclip_x1
+						|| x == (int)render.preclip_x2))
+			{
+				//ft_printf("drawing line at %d from %d to %d\n", vline.x, vline.start, vline.end);
+				draw_vline_color(vline, render, env);
+			}
+		}
 		x++;
+	}
+	if (!env->options.wall_color && THREADS == 1)
+	{
+		//ft_printf("x1 = %d, x2 = %d\n", (int)render.xmin, (int)render.xmax);
+		ft_printf("xstart = %d, xend = %d\n\n", ((t_render_thread*)param)->xstart, x - 1);
+		if (!env->inputs.shift)
+			update_screen(env);
+		else
+			update_screen_zbuffer(env);
+		SDL_Delay(1000);
 	}
 	return (NULL);
 }
@@ -97,15 +121,32 @@ void	threaded_raycasting(t_env *env, t_render render)
 	//raycasting(&original);
 	i = 0;
 	//ft_printf("\ndebut = %d fin = %d\n", render.xstart, render.xend);
+	//ft_printf("raycasting.c line 100\n");
 	while (i < THREADS)
 	{
 		rt[i].env = env;
+		//ft_memcpy((void *)&rt[i].env, (void *)env, sizeof(t_env));
+		//ft_memcpy((void *)&rt[i].render, (void*)&render , sizeof(t_render));
 		rt[i].render = render;
 		rt[i].xstart = render.xstart + (render.xend - render.xstart) / (double)THREADS * i;
 		rt[i].xend = render.xstart + (render.xend - render.xstart) / (double)THREADS * (i + 1);
-		pthread_create(&threads[i], NULL, raycasting, &rt[i]);
+		//ft_printf("raycasting.c line 107\n");
+		if (pthread_create(&threads[i], NULL, raycasting, &rt[i]) > 0)
+			return ;
+		//ft_printf("raycasting.c line 109\n");
 		i++;
 	}
 	while (i-- > 0)
-		pthread_join(threads[i], NULL);
+	{
+		//ft_printf("raycasting.c line 114\n");
+		//if (threads[i])
+		//{
+			//ft_printf("thread exist\n");
+			pthread_join(threads[i], NULL);
+		//}
+		//else
+			//ft_printf("error, thread doesn't exist\n");
+		//ft_printf("raycasting.c line 116\n");
+	}
+	//ft_printf("raycasting.c line 118\n");
 }

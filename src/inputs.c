@@ -6,7 +6,7 @@
 /*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/04/24 14:33:55 by lnicosia          #+#    #+#             */
-/*   Updated: 2019/07/25 11:06:14 by sipatry          ###   ########.fr       */
+/*   Updated: 2019/09/04 17:24:54 by sipatry          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@ void	init_inputs(t_env *env)
 {
 	env->inputs.forward = 0;
 	env->inputs.backward = 0;
+	env->inputs.s = 0;
 	env->inputs.left = 0;
 	env->inputs.right = 0;
 	env->inputs.plus = 0;
@@ -26,6 +27,11 @@ void	init_inputs(t_env *env)
 	env->inputs.ctrl = 0;
 	env->inputs.option = 0;
 	env->inputs.left_click = 0;
+	env->inputs.right_click = 0;
+	env->inputs.enter = 0;
+	env->inputs.up = 0;
+	env->inputs.down = 0;
+	env->inputs.tab = 0;
 }
 
 int		button_leftclick(t_env *env, int nb)
@@ -57,7 +63,7 @@ void	set_inputs(t_env *env, int mode)
 	if (env->sdl.event.key.keysym.sym == env->keys.forward
 			|| env->sdl.event.key.keysym.sym == env->keys.forward2)
 		env->inputs.forward = mode;
-	if (env->sdl.event.key.keysym.sym == env->keys.backward
+	if (env->sdl.event.key.keysym.sym == env->keys.s
 			|| env->sdl.event.key.keysym.sym == env->keys.backward2)
 		env->inputs.backward = mode;
 	if (env->sdl.event.key.keysym.sym == env->keys.left
@@ -81,11 +87,20 @@ void	set_inputs(t_env *env, int mode)
 	if (env->sdl.event.key.keysym.sym == env->keys.down)
 		env->inputs.down = mode;
 	if (env->sdl.event.key.keysym.sym == env->keys.option)
-		env->inputs.option = mode;
+		env->inputs.option = mode;	
 	if (env->sdl.event.button.button == SDL_BUTTON_LEFT)
 		env->inputs.left_click = mode;
 	if (env->sdl.event.button.button == SDL_BUTTON_RIGHT)
 		env->inputs.right_click = mode;
+	if (env->sdl.event.key.keysym.sym == env->keys.enter)
+		env->inputs.enter = mode;
+	if (env->sdl.event.key.keysym.sym == env->keys.s)
+		env->inputs.s = mode;
+	if (env->sdl.event.key.keysym.sym == env->keys.backspace)
+		env->inputs.backspace = mode;
+	if (env->sdl.event.key.keysym.sym == env->keys.del)
+		env->inputs.del = mode;
+
 }
 
 void	update_inputs(t_env *env)
@@ -93,10 +108,7 @@ void	update_inputs(t_env *env)
 	if (env->sdl.event.type == SDL_KEYDOWN)
 		set_inputs(env, 1);
 	if (env->sdl.event.type == SDL_KEYUP)
-	{
 		set_inputs(env, 0);
-		options(env);
-	}
 	if (env->sdl.event.type == SDL_MOUSEBUTTONDOWN)
 		set_inputs(env, 1);
 	if (env->sdl.event.type == SDL_MOUSEBUTTONUP)

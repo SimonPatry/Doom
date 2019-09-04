@@ -6,7 +6,7 @@
 /*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/04/09 11:57:06 by lnicosia          #+#    #+#             */
-/*   Updated: 2019/07/25 10:12:02 by lnicosia         ###   ########.fr       */
+/*   Updated: 2019/09/04 15:04:54 by sipatry          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,9 @@ short	get_vertex_nb_in_sector(short vertex, t_sector sector)
 
 void	clipped_slope1(t_env *env, t_sector sector, t_render render, int i)
 {
+	t_vertex	v;
+
+	v = env->vertices[sector.vertices[i]];
 	env->vertices[sector.vertices[i]].clipped_x[0] = render.clipped_vx1 * env->player.angle_sin
 		+ render.clipped_vz1 * env->player.angle_cos;
 	env->vertices[sector.vertices[i]].clipped_y[0] = render.clipped_vx1 * -env->player.angle_cos
@@ -40,13 +43,18 @@ void	clipped_slope1(t_env *env, t_sector sector, t_render render, int i)
 	env->vertices[sector.vertices[i]].clipped_y[0] += env->player.pos.y;
 	env->vertices[sector.vertices[i]].clipped[0] = 1;
 	if (sector.floor_slope)
-		env->sectors[render.sector].clipped_floors1[i] = get_clipped_floor(0, sector, env->vertices[sector.vertices[i]], env); 
+		env->sectors[render.sector].clipped_floors1[i] = get_floor_at_pos(sector,
+				new_v2(v.clipped_x[0], v.clipped_y[0]), env);
 	if (sector.ceiling_slope)
-		env->sectors[render.sector].clipped_ceilings1[i] = get_clipped_ceiling(0, sector, env->vertices[sector.vertices[i]], env); 
+		env->sectors[render.sector].clipped_ceilings1[i] = get_ceiling_at_pos(sector,
+				new_v2(v.clipped_x[0], v.clipped_y[0]), env);
 }
 
 void	clipped_slope2(t_env *env, t_sector sector, t_render render, int i)
 {
+	t_vertex	v;
+
+	v = env->vertices[sector.vertices[i + 1]];
 	env->vertices[sector.vertices[i + 1]].clipped_x[1] = render.clipped_vx2 * env->player.angle_sin
 		+ render.clipped_vz2 * env->player.angle_cos;
 	env->vertices[sector.vertices[i + 1]].clipped_y[1] = render.clipped_vx2 * -env->player.angle_cos
@@ -55,9 +63,11 @@ void	clipped_slope2(t_env *env, t_sector sector, t_render render, int i)
 	env->vertices[sector.vertices[i + 1]].clipped_y[1] += env->player.pos.y;
 	env->vertices[sector.vertices[i + 1]].clipped[1] = 1;
 	if (sector.floor_slope)
-		env->sectors[render.sector].clipped_floors2[i + 1] = get_clipped_floor(1, sector, env->vertices[sector.vertices[i + 1]], env); 
+		env->sectors[render.sector].clipped_floors1[i + 1] = get_floor_at_pos(sector,
+				new_v2(v.clipped_x[1], v.clipped_y[1]), env);
 	if (sector.ceiling_slope)
-		env->sectors[render.sector].clipped_ceilings2[i + 1] = get_clipped_ceiling(1, sector, env->vertices[sector.vertices[i + 1]], env); 
+		env->sectors[render.sector].clipped_ceilings1[i + 1] = get_ceiling_at_pos(sector,
+				new_v2(v.clipped_x[1], v.clipped_y[1]), env);
 }
 
 
@@ -76,6 +86,11 @@ void	render_sector(t_env *env, t_render render)
 		while (i < sector.nb_vertices)
 		{
 			render.i = i;
+			render.selected = 0;
+			if (env->selected_wall1 == sector.vertices[i]
+					&& env->selected_wall2 == sector.vertices[i + 1]
+					&& env->selected_floor == -1 && env->selected_ceiling == -1)
+				render.selected = 1;
 			// Calculer les coordonnes transposees du mur par rapport au joueur 
 			get_translated_vertices(&render, env, sector, i);
 			// Calculer les coordonnes tournees du mur par rapport au joueur 
@@ -117,7 +132,7 @@ void	render_sector(t_env *env, t_render render)
 				project_floor_and_ceiling(&render, env, sector, i);
 
 				if (render.x1 < render.x2
-						&& render.x1 < render.xmax && render.x2 > render.xmin)
+						&& render.x1 <= render.xmax && render.x2 >= render.xmin)
 				{
 					render.xstart = ft_max(render.x1, render.xmin);
 					render.xend = ft_min(render.x2, render.xmax);
@@ -128,6 +143,8 @@ void	render_sector(t_env *env, t_render render)
 						render.nv1 = get_vertex_nb_in_sector(sector.vertices[i], env->sectors[sector.neighbors[i]]);
 						render.nv2 = get_vertex_nb_in_sector(sector.vertices[i + 1], env->sectors[sector.neighbors[i]]);
 						project_neighbor_floor_and_ceiling(&render, env, env->sectors[sector.neighbors[i]]);
+						render.neighbor_ceil_range = render.neighbor_ceiling2 - render.neighbor_ceiling1;
+						render.neighbor_floor_range = render.neighbor_floor2 - render.neighbor_floor1;
 					}
 					x = render.xstart;
 					render.xrange = render.x2 - render.x1;
@@ -197,12 +214,12 @@ static void		reset_render_utils(t_env *env)
 		env->ymax[i] = ymax;
 		i++;
 	}
-	i = 0;
+	/*i = 0;
 	while (i < env->nb_objects)
 	{
 		env->objects[i].seen = 0;
 		i++;
-	}
+	}*/
 }
 
 /*
