@@ -1,13 +1,13 @@
 /* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   doom.c                                             :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2019/04/03 15:26:12 by lnicosia          #+#    #+#             */
-/*   Updated: 2019/09/04 10:51:22 by lnicosia         ###   ########.fr       */
-/*                                                                            */
+/*																			*/
+/*														:::	  ::::::::   */
+/*   doom.c											 :+:	  :+:	:+:   */
+/*													+:+ +:+		 +:+	 */
+/*   By: gaerhard <gaerhard@student.42.fr>		  +#+  +:+	   +#+		*/
+/*												+#+#+#+#+#+   +#+		   */
+/*   Created: 2019/04/03 15:26:12 by lnicosia		  #+#	#+#			 */
+/*   Updated: 2019/10/17 14:25:22 by gaerhard		 ###   ########.fr	   */
+/*																			*/
 /* ************************************************************************** */
 
 #include "env.h"
@@ -21,7 +21,7 @@ int		doom(t_env *env)
 	env->player.size_2d = 0.5;
 	ft_printf("Starting music..\n");
 	Mix_PlayMusic(env->sound.background, -1);
-	ft_printf("Launching game loop..\n");
+	//ft_printf("launching game loop..\n");
 	env->flag = 0;
 	env->player.fall = 1;*/
 	while (env->running)
@@ -39,15 +39,23 @@ int		doom(t_env *env)
 					|| env->sdl.event.type == SDL_KEYUP || env->sdl.event.type == SDL_MOUSEBUTTONDOWN
 					|| env->sdl.event.type == SDL_MOUSEBUTTONUP || env->sdl.event.type == SDL_MOUSEWHEEL)
 				update_inputs(env);
-			if (env->sdl.event.type == SDL_KEYUP)
+			if (env->sdl.event.type == SDL_KEYUP || env->sdl.event.type == SDL_MOUSEBUTTONUP)
 				keyup(env);
-			if (env->sdl.event.type == SDL_MOUSEWHEEL && !env->weapon_change.on_going && !env->shot.on_going)
+			if (env->sdl.event.type == SDL_MOUSEWHEEL && !env->weapon_change.on_going && !env->shot.on_going && env->player.health > 0)
 				weapon_change(env);
 		}
-		enemy_pursuit(env);
-		objects_collision(env);
-		enemy_collision(env);
-		keys(env);
+		update_sprites_state(env);
+		if (env->player.health > 0)
+		{
+			enemy_ai(env);
+			objects_collision(env);
+			enemy_collision(env);
+			keys(env);
+		}
+		if (env->player.health <= 0)
+			death(env);
+		if (env->confirmation_box.state)
+			confirmation_box_keys(&env->confirmation_box, env);
 		if (env->menu_start)
 			start_game_menu(env);
 		else
@@ -60,7 +68,6 @@ int		doom(t_env *env)
 			else if (draw_game(env))
 				return (ft_printf("Crash in game loop\n"));
 		}
-	//	SDL_Delay(5);
 	}
 	ft_printf("User quit the game\n");
 	free_all(env);

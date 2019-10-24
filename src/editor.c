@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   editor.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sipatry <marvin@42.fr>                     +#+  +:+       +#+        */
+/*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/22 17:14:57 by sipatry           #+#    #+#             */
-/*   Updated: 2019/09/04 15:28:24 by sipatry          ###   ########.fr       */
+/*   Updated: 2019/10/23 16:15:03 by gaerhard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,10 +31,19 @@ int		editor(t_env *env)
 				editor_keyup(env);
 			if (!env->editor.in_game && env->sdl.event.type == SDL_MOUSEWHEEL)
 			{
-				if (env->sdl.event.wheel.y > 0 && env->editor.scale * 1.1 < 500)
+				if (env->sdl.event.wheel.y > 0 && env->editor.scale * 1.1 < 100)
+				{
+					env->editor.center.x = env->sdl.mx + ((env->editor.center.x - env->sdl.mx) * 1.1);
+					env->editor.center.y = env->sdl.my + ((env->editor.center.y - env->sdl.my) * 1.1);
 					env->editor.scale *= 1.1;
-				if (env->sdl.event.wheel.y < 0 && env->editor.scale / 1.1 > 10)
+				}
+				if (env->sdl.event.wheel.y < 0 && env->editor.scale / 1.1 > 1)
+				{
+				
+					env->editor.center.x = env->sdl.mx + ((env->editor.center.x - env->sdl.mx) / 1.1);
+					env->editor.center.y = env->sdl.my + ((env->editor.center.y - env->sdl.my) / 1.1);
 					env->editor.scale /= 1.1;
+				}
 			}
 		}
 		if (!env->editor.in_game)
@@ -47,6 +56,8 @@ int		editor(t_env *env)
 				draw_grid_player(env);
 			if (env->editor.dragged_object != -1 || env->nb_objects > 0)
 				draw_grid_objects(env);
+			if (env->editor.dragged_enemy != -1 || env->nb_enemies > 0)
+				draw_grid_enemies(env);
 			if (env->editor.start_vertex != -1)
 				draw_grid_current_sector(env);
 			draw_grid_sectors(env);

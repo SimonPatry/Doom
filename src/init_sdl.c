@@ -1,19 +1,21 @@
 /* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   init_sdl.c                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2019/04/03 15:43:13 by lnicosia          #+#    #+#             */
-/*   Updated: 2019/08/12 14:07:44 by sipatry          ###   ########.fr       */
-/*                                                                            */
+/*																			*/
+/*														:::	  ::::::::   */
+/*   init_sdl.c										 :+:	  :+:	:+:   */
+/*													+:+ +:+		 +:+	 */
+/*   By: gaerhard <gaerhard@student.42.fr>		  +#+  +:+	   +#+		*/
+/*												+#+#+#+#+#+   +#+		   */
+/*   Created: 2019/04/03 15:43:13 by lnicosia		  #+#	#+#			 */
+/*   Updated: 2019/09/30 11:11:18 by gaerhard		 ###   ########.fr	   */
+/*																			*/
 /* ************************************************************************** */
 
 #include "env.h"
 
 int		set_sdl(t_env *env)
 {
+	/*env->w = 1280;
+	env->h = 720;*/
 	if (!(env->sdl.window = SDL_CreateWindow(
 					"Dookme",
 					SDL_WINDOWPOS_CENTERED,
@@ -57,14 +59,12 @@ int		set_sdl(t_env *env)
 		return (ft_printf("SDL_CreateTextureFromSurface error: %s\n", SDL_GetError()));
 	if (!(env->sdl.texture_pixels = (Uint32*)malloc(sizeof(Uint32) * env->w * env->h)))
 		return (ft_printf("Could not malloc texture pixels\n"));
-	if (!(env->depth_array = (double*)malloc(sizeof(double) * env->w * env->h)))
-		return (ft_printf("Could not malloc depth array\n"));
 	if (!(env->ymin = (int*)malloc(sizeof(int) * env->w)))
 		return (ft_printf("Could not malloc ymin array\n"));
 	if (!(env->ymax = (int*)malloc(sizeof(int) * env->w)))
 		return (ft_printf("Could not malloc ymax array\n"));
-	if (!(env->screen_pos = (t_v2*)malloc(sizeof(t_v2) * (env->w))))
-		return (ft_printf("Could not malloc screen pos!\n", env));
+	if (!(env->zbuffer = (double*)malloc(sizeof(double) * env->w * env->h)))
+		return (ft_printf("Could not malloc depth array\n"));
 	clear_image(env);
 	if (SDL_RenderCopy(
 				env->sdl.renderer,
@@ -73,6 +73,8 @@ int		set_sdl(t_env *env)
 				NULL) != 0)
 		return (ft_printf("SDL_RendererCopy error: %s\n", SDL_GetError()));
 	SDL_RenderPresent(env->sdl.renderer);
+	SDL_SetWindowDisplayMode(env->sdl.window, NULL);
+	SDL_GetRelativeMouseState(&env->sdl.mouse_x, &env->sdl.mouse_y);
 	return (0);
 }
 

@@ -3,15 +3,51 @@
 /*                                                        :::      ::::::::   */
 /*   get_slope.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lnicosia <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/04/18 17:04:57 by lnicosia          #+#    #+#             */
-/*   Updated: 2019/08/15 14:16:12 by lnicosia         ###   ########.fr       */
+/*   Updated: 2019/10/23 16:15:54 by gaerhard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "env.h"
 #include "render.h"
+
+
+/*
+**	rotate vertices in selected sector wich make the slope rotate too
+*/
+
+t_sector	rotate_vertices(t_env *env, int i, int index)
+{
+	t_sector	sector;
+	int			j;
+
+	sector = env->sectors[index];
+	ft_printf("test\n");
+	if (i == 1)
+		j = 0;
+	else
+		j = sector.nb_vertices;
+	while ((j < sector.nb_vertices && i == 1) || (j > 0 && i == -1))
+	{
+		if (i == 1)
+		{
+			sector.vertices[j] = sector.vertices[j + 1];
+			j++;
+		}
+		if (i == -1)
+		{
+			sector.vertices[j] = sector.vertices[j - 1];
+			j--;
+		}
+	}
+	if (i == 1)
+		sector.vertices[sector.nb_vertices] = sector.vertices[0];
+	else if (i == -1)
+		sector.vertices[0] = sector.vertices[sector.nb_vertices];
+	return (sector);
+}
 
 /*
 ** Returns the given sector's normal starting from its first vertex.
@@ -108,7 +144,6 @@ void	update_sector_slope(t_env *env, t_sector *sector)
 {
 	int			i;
 	t_vertex	v1;
-	t_vertex	v2;
 
 	if (sector->num < 0 || sector->num > env->nb_sectors)
 	{
@@ -122,7 +157,6 @@ void	update_sector_slope(t_env *env, t_sector *sector)
 	while (i < sector->nb_vertices)
 	{
 		v1 = env->vertices[sector->vertices[i]];
-		v2 = env->vertices[sector->vertices[i + 1]];
 		if (sector->floor_slope != 0)
 			sector->floors[i] = get_floor_at_pos(*sector,
 					new_v2(v1.x, v1.y), env);

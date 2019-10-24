@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   init_editor.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sipatry <marvin@42.fr>                     +#+  +:+       +#+        */
+/*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/23 11:26:04 by sipatry           #+#    #+#             */
-/*   Updated: 2019/09/04 15:42:11 by sipatry          ###   ########.fr       */
+/*   Updated: 2019/10/23 16:16:09 by gaerhard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,7 @@ void	init_editor_data(t_env *env)
 	env->editor.dragged_object = -1;
 	env->editor.dragged_vertex = -1;
 	env->editor.dragged_player = -1;
+	env->editor.dragged_enemy = -1;
 	env->editor.tab = 0;
 	env->selected_wall1 = -1;
 	env->selected_wall2 = -1;
@@ -45,6 +46,10 @@ void	init_editor_data(t_env *env)
 	env->selected_ceiling = -1;
 	env->selected_enemy = -1;
 	env->selected_object = -1;
+	env->selected_stat = 0;
+	env->time.tick = 0;
+	env->time.tick2 = 0;
+	env->time.tick3 = 0;
 }
 
 int	init_editor(int ac, char **av)
@@ -54,13 +59,14 @@ int	init_editor(int ac, char **av)
 	ft_bzero(&env, sizeof(t_env));
 	env.running = 1;
 	env.drawing = 1;
+	env.playing = 0;
 	if (init_screen_size(&env))
 		return (crash("Could not initialize screen sizes\n", &env));
 	init_options(&env);
 	init_keys(&env);
 	init_editor_data(&env);
 	init_inputs(&env);
-	init_camera(&env);
+	init_player(&env);
 	if (init_sdl(&env))
 		return (crash("Could not initialize SDL\n", &env));
 	if (init_sound(&env))
@@ -83,5 +89,7 @@ int	init_editor(int ac, char **av)
 		precompute_slopes(&env);
 		ft_printf("{reset}");
 	}
+	if (init_camera(&env.player.camera, &env))
+		return (crash("Could not init camera\n", &env));
 	return (editor(&env));
 }

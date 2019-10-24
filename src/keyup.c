@@ -6,7 +6,7 @@
 /*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/04/12 15:17:30 by lnicosia          #+#    #+#             */
-/*   Updated: 2019/09/03 13:20:55 by lnicosia         ###   ########.fr       */
+/*   Updated: 2019/09/25 16:31:28 by gaerhard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,11 +67,13 @@ void	keyup(t_env *env)
 		env->option = env->option ? 0 : 1;
 		if (env->option)
 			SDL_SetRelativeMouseMode(0);
-		else
+		else if (env->player.health > 0)
 			SDL_SetRelativeMouseMode(1);
 	}
 	if (env->sdl.event.key.keysym.sym == SDLK_TAB)
 		env->options.zbuffer = env->options.zbuffer ? 0 : 1;
+	if (env->confirmation_box.state)
+		confirmation_box_keyup_ig(&env->confirmation_box, env);
 }
 
 void	screen_options(t_env *env)
@@ -129,17 +131,16 @@ int		open_options(t_env *env)
 		else if (env->inputs.left_click
 				&& button_leftclick(env, 1))
 			env->aplicate_changes = 1;
+		env->inputs.left_click = 0;
 	}
 	if (env->aplicate_changes)
 	{
 		free_all_sdl_relative(env);
 		set_screen_size(env);
-		set_camera(env);
+		set_camera(&env->player.camera, env);
 		if (set_sdl(env))
 			return (ft_printf("Could not re load sdl\n"));
-		if (init_screen_pos(env))
-			return (ft_printf("Could not re load screen pos\n"));
-		//set_camera(env);
+		env->inputs.left_click = 0;
 		env->aplicate_changes = 0;
 	}
 	return (0);

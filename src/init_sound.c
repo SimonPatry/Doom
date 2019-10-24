@@ -1,13 +1,13 @@
 /* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   init_sound.c                                       :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2019/06/13 15:13:11 by gaerhard          #+#    #+#             */
-/*   Updated: 2019/07/24 15:00:05 by sipatry          ###   ########.fr       */
-/*                                                                            */
+/*																			*/
+/*														:::	  ::::::::   */
+/*   init_sound.c									   :+:	  :+:	:+:   */
+/*													+:+ +:+		 +:+	 */
+/*   By: gaerhard <gaerhard@student.42.fr>		  +#+  +:+	   +#+		*/
+/*												+#+#+#+#+#+   +#+		   */
+/*   Created: 2019/06/13 15:13:11 by gaerhard		  #+#	#+#			 */
+/*   Updated: 2019/07/24 15:00:05 by sipatry		  ###   ########.fr	   */
+/*						                                                    */
 /* ************************************************************************** */
 
 #include "env.h"
@@ -20,7 +20,7 @@ int     init_sound(t_env *env)
 	env->sound.g_music = 20;
     if (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 1024) == -1)
 		return (ft_printf("SDL_OpenAudio error %s\n", Mix_GetError()));
-	if(!(env->sound.background = Mix_LoadMUS("audio/at_dooms_gate.mp3")))
+	if(!(env->sound.background = Mix_LoadMUS("audio/at_dooms_gate.wav")))
     	return (ft_printf("Failed to load Music %s\n", Mix_GetError()));
 	Mix_AllocateChannels(3);
 	if (!(env->sound.footstep = Mix_LoadWAV("audio/footstep.wav")))

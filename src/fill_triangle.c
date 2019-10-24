@@ -1,13 +1,13 @@
 /* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   fill_triangle_minimap.c                            :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: lnicosia <marvin@42.fr>                    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2019/05/07 15:18:51 by lnicosia          #+#    #+#             */
-/*   Updated: 2019/09/04 10:56:39 by lnicosia         ###   ########.fr       */
-/*                                                                            */
+/*																			*/
+/*														:::	  ::::::::   */
+/*   fill_triangle_minimap.c							:+:	  :+:	:+:   */
+/*													+:+ +:+		 +:+	 */
+/*   By: lnicosia <marvin@42.fr>					+#+  +:+	   +#+		*/
+/*												+#+#+#+#+#+   +#+		   */
+/*   Created: 2019/05/07 15:18:51 by lnicosia		  #+#	#+#			 */
+/*   Updated: 2019/09/19 17:00:07 by lnicosia		 ###   ########.fr	   */
+/*																			*/
 /* ************************************************************************** */
 
 #include "env.h"
@@ -75,7 +75,8 @@ void	compute_triangle(t_v3 v[3], t_v2 p, Uint32 color, t_env *data)
 		w.x /= area;
 		w.y /= area;
 		w.z /= area;
-		pixels[coord] = color;
+		if (p.x >= 200)
+			pixels[coord] = color;
 	}
 }
 

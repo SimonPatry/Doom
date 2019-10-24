@@ -6,36 +6,64 @@
 /*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 20:54:27 by lnicosia          #+#    #+#             */
-/*   Updated: 2019/09/04 17:50:03 by sipatry          ###   ########.fr       */
+/*   Updated: 2019/10/23 15:59:02 by gaerhard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef UTILS_H
 # define UTILS_H
 
-# include <SDL.h>
-# include <SDL_ttf.h>
-# include <SDL_mixer.h>
+# define SDL_MAIN_HANDLED
+# include "SDL.h"
+# include "SDL_ttf.h"
+# include "SDL_mixer.h"
 # include <fcntl.h>
 # include <pthread.h>
 # include "libft.h"
-# define X1 env->vertices[env->sectors[env->player.sector].vertices[i]].x
-# define X2 env->vertices[env->sectors[env->player.sector].vertices[i + 1]].x
-# define Y1 env->vertices[env->sectors[env->player.sector].vertices[i]].y
-# define Y2 env->vertices[env->sectors[env->player.sector].vertices[i + 1]].y
+# define X1 env->vertices[env->sectors[motion.sector].vertices[i]].x
+# define X2 env->vertices[env->sectors[motion.sector].vertices[i + 1]].x
+# define Y1 env->vertices[env->sectors[motion.sector].vertices[i]].y
+# define Y2 env->vertices[env->sectors[motion.sector].vertices[i + 1]].y
 # define PLAYER_XPOS env->player.pos.x
 # define PLAYER_YPOS env->player.pos.y
-# define MAX_TEXTURE 38
+# define MAX_TEXTURE 45
 # define CONVERT_RADIANS 0.0174532925199432955
 # define CONVERT_DEGREES 57.2957795130823228647
-# define MAX_SPRITES 2
+# define MAX_SPRITES 3
 # define NB_WEAPONS 2
 # define NB_BUTTON 10
 # define AMMO_HUD 36
 # define ARMOR_LIFE_HUD 35
 # define THREADS 4
+# define MAX_QUEUE 32
 # define MAX_W 2560
 # define MAX_H 1440
+
+typedef enum		e_enemy_state
+{
+	RESTING,
+	PURSUING,
+	FIRING
+}					t_enemy_state;
+
+typedef enum		e_entity_sprite
+{
+	LOST_SOUL = 1,
+	CYBER_DEMON
+}					t_entity_sprite;
+
+typedef enum		e_enemy_behavior
+{
+	MELEE,
+	RANGED
+}					t_enemy_behavior;
+
+typedef enum		e_enemy_type
+{
+	TERRESTRIAL,
+	AERIAL,
+	AQUATIC
+}					t_enemy_type;
 
 typedef struct		s_line_eq
 {
@@ -58,23 +86,105 @@ typedef struct		s_circle
 	int				radius;
 }					t_circle;
 
-/*
-** VERTICES = PLURIEL DE VERTEX
-*/
+typedef struct		s_elevator
+{
+	int				up;
+	int				down;
+	int				on;
+	int				off;
+	double				next_stop;
+}					t_elevator;
+
+typedef struct		s_state
+{
+	int				fall;
+	int				jump;
+	int				run;
+	int				crouch;
+	int				climb;
+	int				drop;
+	int				walk;
+}					t_state;
+
+typedef struct		s_render_vertex
+{
+	t_v2			texture_scale;
+	t_v2			sprite_scale;
+	double			vx;
+	double			vz;
+	double			clipped_vx1;
+	double			clipped_vz1;
+	double			clipped_vx2;
+	double			clipped_vz2;
+	double			clipped_vf1;
+	double			clipped_vc1;
+	double			clipped_vf2;
+	double			clipped_vc2;
+	double			clipped_x1;
+	double			clipped_x2;
+	double			f1;
+	double			f2;
+	double			c1;
+	double			c2;
+	double			x;
+	double			neighbor_f1;
+	double			neighbor_f2;
+	double			neighbor_floor_range;
+	double			neighbor_c1;
+	double			neighbor_c2;
+	double			neighbor_ceiling_range;
+	double			scale1;
+	double			scale2;
+	double			angle_z1;
+	double			angle_z2;
+	double			no_slope_f1;
+	double			no_slope_f2;
+	double			no_slope_c1;
+	double			no_slope_c2;
+	int				draw;
+	double			floor_horizon;
+	double			ceiling_horizon;
+	double			xrange;
+	double			clipped_xrange;
+	double			floor_range;
+	double			ceiling_range;
+	double			no_slope_floor_range;
+	double			no_slope_ceiling_range;
+	double			zrange;
+	double			zcomb;
+	double			x0z1;
+	double			x1z0;
+	double			xzrange;
+	double			y0z1;
+	double			y1z0;
+	double			yzrange;
+}					t_render_vertex;
+
+typedef struct		s_wall_sprite
+{
+	short			sprite;
+	t_v2			pos;
+	t_v2			scale;
+}					t_wall_sprite;
 
 typedef struct		s_sector
 {
 	t_v2			normal;
 	double			floor;
 	double			floor_slope;
+	short			floor_texture;
+	t_v2			floor_scale;
+	t_v2			floor_align;
 	double			ceiling;
 	double			ceiling_slope;
+	short			ceiling_texture;
+	t_v2			ceiling_scale;
+	t_v2			ceiling_align;
 	double			x_max;
 	double			floor_min;
 	double			ceiling_min;
 	double			floor_max;
 	double			ceiling_max;
-	double			light;
 	double			*wall_width;
 	double			*floors;
 	double			*ceilings;
@@ -85,10 +195,18 @@ typedef struct		s_sector
 	short			*vertices;
 	short			*neighbors;
 	short			*textures;
-	short			ceiling_texture;
-	short			floor_texture;
+	t_wall_sprite	*sprites;
+	double			sprite_time;
+	t_v2			*align;
+	t_v2			*scale;
+	short			*selected;
 	short			num;
 	short			nb_vertices;
+	int				skybox;
+	int				statue;
+	int				brightness;
+	int				*levels;
+	Uint32			light_color;
 }					t_sector;
 
 typedef struct		s_vertex
@@ -101,48 +219,22 @@ typedef struct		s_vertex
 	short			num;
 }					t_vertex;
 
-typedef struct		s_player
-{
-	t_v3			pos;
-	t_v2			near_left;
-	t_v2			near_right;
-	int				stuck;
-	int				prev_sector;
-	double			gravity;
-	double			eyesight;
-	double			angle;
-	double			angle_cos;
-	double			angle_sin;
-	double			perp_cos;
-	double			perp_sin;
-	double			angle_z;
-	double			angle_z_cos;
-	double			angle_z_sin;
-	double			speed;
-	int				hit;
-	double			size_2d;
-	double			camera_x;
-	double			camera_y;
-	double			rotation_speed;
-	short			sector;
-	double			state;
-	int				highest_sect;
-	int				curr_weapon;
-	int				life;
-	int				armor;
-	double			head_z;
-}					t_player;
-
 /*
 **	Camera values
 */
 
 typedef struct		s_camera
 {
+	t_v3			pos;
+	t_v2			near_left_pos;
+	t_v2			near_right_pos;
+	t_v2			near_pos;
+	t_render_vertex	**v;
 	double			near_z;
 	double			far_z;
 	double			near_left;
 	double			near_right;
+	double			range;
 	double			near_up;
 	double			near_down;
 	double			far_left;
@@ -159,7 +251,68 @@ typedef struct		s_camera
 	double			y2;
 	double			hscale;
 	double			vscale;
+	double			angle;
+	double			angle_cos;
+	double			angle_sin;
+	double			perp_cos;
+	double			perp_sin;
+	double			angle_z;
+	double			angle_z_cos;
+	double			angle_z_sin;
+	double			horizon;
+	double			*feet_y;
+	double			*head_y;
+	int				*screen_sectors;
+	int				*screen_pos;
+	short			*rendered_sectors;
+	int				*xmin;
+	int				*xmax;
+	int				computed;
+	int				*sector_computed;
+	int				size;
 }					t_camera;
+
+typedef	struct		s_init_data
+{
+	t_v3			pos;
+	t_camera		camera;
+	int				sector;
+	double			angle;
+	int				health;	
+	int				main_sprite;
+}					t_init_data;
+
+typedef struct		s_player
+{
+	t_v3			pos;
+	t_camera		camera;
+	t_init_data		player_init_data;
+	int				stuck;
+	int				prev_sector;
+	double			gravity;
+	double			eyesight;
+	double			speed;
+	int				hit;
+	double			size_2d;
+	double			rotation_speed;
+	short			sector;
+	int				lowest_sect;
+	int				highest_sect;
+	int				curr_weapon;
+	int				health;
+	int				armor;
+	int				killed;
+	double			nb_shots;
+	double			touched;
+	int				accuracy;
+	double			head_z;
+	t_state			state;
+	double			velocity;
+	double			velocity_start;
+	double			acceleration;
+	double			start_pos;
+	int				drop_flag;
+}					t_player;
 
 /*
 ** Player's keys configuration
@@ -188,6 +341,10 @@ typedef struct		s_keys
 	int				s;
 	int				del;
 	int				tab;
+	int				comma;
+	int				period;
+	int				minus1;
+	int				equals;
 }					t_keys;
 
 /*
@@ -215,6 +372,10 @@ typedef struct		s_inputs
 	uint8_t			s;
 	uint8_t			del;
 	uint8_t			tab;
+	uint8_t			comma;
+	uint8_t			period;
+	uint8_t			minus1;
+	uint8_t			equals;
 }					t_inputs;
 
 /*
@@ -253,22 +414,30 @@ typedef struct		s_audio
 **	Contains every data needed for an animation on the screen
 */
 
+
+
 typedef struct		s_time
 {
+	double			tick;
+	double			tick2;
+	double			tick3;
 	double			start;
 	double			end;
 	double			minuts;
 	double			tenth_s;
 	double			milli_s;
+	double			last_fall;
+	double			last_jump;
+	double			last_climb;
+	double			last_crouch;
+	double			last_drop;
+	double			d_time;
 }					t_time;
 
 typedef struct		s_gravity
 {
-	double			start;
-	double			end;
-	double			floor;
-	double			weight;
-	double			on_going;
+	double			velocity;
+	double			acceleration;	
 }					t_gravity;
 
 typedef struct		s_animation
@@ -314,9 +483,12 @@ typedef struct		s_sprite
 	t_point			end[8];
 	t_point			size[8];
 	int				reversed[8];
+	int				rest_sprite;
+	int				curr_sprite;
+	int				firing_sprite;
+	int				pursuit_sprite;
 	int				death_counterpart;
-	double			width;
-	double			height;
+	int				nb_death_sprites;
 }					t_sprite;
 
 /*
@@ -328,6 +500,7 @@ typedef struct		s_object
 	t_v3			pos;
 	t_v3			translated_pos;
 	t_v3			rotated_pos;
+	t_init_data		object_init_data;
 	int				left;
 	int				right;
 	int				top;
@@ -335,7 +508,8 @@ typedef struct		s_object
 	int				sprite;
 	double			scale;
 	double			angle;
-	double			light;
+	short			brightness;
+	Uint32			light_color;
 	int				pickable;
 	int				solid;
 	int				ammo;
@@ -349,24 +523,48 @@ typedef struct		s_object
 typedef struct		s_enemies
 {
 	t_v3			pos;
+	t_v3			last_player_pos;
 	t_v3			translated_pos;
 	t_v3			rotated_pos;
-	float			speed;
+	t_v2			far_left;
+	t_v2			far_right;
+	t_v2			left_arm;
+	t_v2			right_arm;
+	t_init_data		enemies_init_data;
+	int				type;
+	int				behavior;
+	int				speed;
+	int				shot;
+	int				hit;
 	int				left;
 	int				right;
 	int				top;
 	int				bottom;
 	int				sprite;
+	int				main_sprite;
 	int				death_sprite;
+	int				firing_sprite;
+	int				seen;
+	int				saw_player;
 	double			scale;
 	double			angle;
-	double			light;
+	double			size_2d;
+	double			eyesight;
+	short			brightness;
+	Uint32			light_color;
 	int				health;
 	int				damage;
 	int				exists;
 	int				sector;
 	int				num;
+	int				state;
+	int				dir;
+	t_animation		rand_dir;
 	t_animation		death;
+	t_animation		hurt;
+	t_animation		rest;
+	t_animation		pursue;
+	t_animation		fire;
 }					t_enemies;
 
 /*

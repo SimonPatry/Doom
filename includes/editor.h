@@ -6,7 +6,7 @@
 /*   By: sipatry <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/23 11:21:53 by sipatry           #+#    #+#             */
-/*   Updated: 2019/09/04 12:27:47 by sipatry          ###   ########.fr       */
+/*   Updated: 2019/09/19 16:51:11 by lnicosia         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,12 +44,13 @@ typedef struct	s_editor
 	int			dragged_object;
 	int			dragged_player;
 	int			dragged_vertex;
+	int			dragged_enemy;
 	int			start_vertex;
 	int			nb_vertex;
 	int			new_player;
 	int			tab;
 	int			select;
-	t_point		center;
+	t_v2		center;
 	double		scale;
 	t_list		*vertices;
 	t_hud		hud;

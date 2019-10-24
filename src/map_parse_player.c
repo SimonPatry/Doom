@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   map_parse_player.c                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lnicosia <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/19 12:05:08 by lnicosia          #+#    #+#             */
-/*   Updated: 2019/08/20 13:37:53 by lnicosia         ###   ########.fr       */
+/*   Updated: 2019/10/23 16:17:10 by gaerhard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,11 +54,12 @@ int		parse_player(t_env *env, t_map_parser *parser)
 			if (valid_number(line, parser) == WRONG_CHAR)
 				return (invalid_char("player angle",
 							"a digit", *line, parser));
-			env->player.angle = (ft_atof(line) + 0.00001) * CONVERT_RADIANS;
-			env->player.angle_cos = cos(env->player.angle);
-			env->player.angle_sin = sin(env->player.angle);
-			env->player.perp_cos = cos(env->player.angle - M_PI / 2);
-			env->player.perp_sin = sin(env->player.angle - M_PI / 2);
+			env->player.camera.angle = (ft_atof(line) + 0.00001) * CONVERT_RADIANS;
+			env->player.camera.angle_cos = cos(env->player.camera.angle);
+			env->player.camera.angle_sin = sin(env->player.camera.angle);
+			env->player.camera.perp_cos = cos(env->player.camera.angle - M_PI / 2);
+			env->player.camera.perp_sin = sin(env->player.camera.angle - M_PI / 2);
+			env->editor.new_player = 1;
 			line = skip_number(line);
 			if (*line && *line == ' ')
 				return (extra_data("player declaration", parser));
@@ -70,6 +71,10 @@ int		parse_player(t_env *env, t_map_parser *parser)
 							env->player.pos)) == -1)
 				return (custom_error_with_line("Player is not in any sector",
 							parser));
+			env->player.highest_sect = env->player.sector;
+			env->player.lowest_sect = env->player.sector;
+			env->player.camera.pos = env->player.pos;
+			env->player.camera.pos.z = env->player.pos.z + 8;
 		}
 		else if (line[0] != '#')
 			return (missing_data("player data", parser));

@@ -1,13 +1,13 @@
 /* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   draw_grid_player.c                                 :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: lnicosia <marvin@42.fr>                    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2019/08/21 13:40:49 by lnicosia          #+#    #+#             */
-/*   Updated: 2019/09/04 10:47:41 by lnicosia         ###   ########.fr       */
-/*                                                                            */
+/*																			*/
+/*														:::	  ::::::::   */
+/*   draw_grid_player.c								 :+:	  :+:	:+:   */
+/*													+:+ +:+		 +:+	 */
+/*   By: lnicosia <marvin@42.fr>					+#+  +:+	   +#+		*/
+/*												+#+#+#+#+#+   +#+		   */
+/*   Created: 2019/08/21 13:40:49 by lnicosia		  #+#	#+#			 */
+/*   Updated: 2019/09/18 11:26:28 by lnicosia		 ###   ########.fr	   */
+/*																			*/
 /* ************************************************************************** */
 
 #include "env.h"
@@ -15,12 +15,10 @@
 void	draw_grid_player(t_env *env)
 {
 	t_circle	circle;
-	double		scale;
 	t_v3		v[3];
 
 	circle.color = 0xFFFF0000;
 	circle.line_color = 0xFFFF0000;
-	scale = 0;
 	if (env->editor.dragged_player == 1)
 	{
 		circle.center.x = env->sdl.mx;
@@ -57,14 +55,14 @@ void	draw_grid_player(t_env *env)
 	if (env->editor.selected_player == 1)
 		circle.line_color = 0xFF00FF00;
 	draw_circle(circle, env);
-	v[0] = new_v3(circle.center.x + env->player.perp_cos * circle.radius / 2,
-			circle.center.y + env->player.perp_sin * circle.radius / 2,
+	v[0] = new_v3(circle.center.x + env->player.camera.perp_cos * circle.radius / 2,
+			circle.center.y + env->player.camera.perp_sin * circle.radius / 2,
 			0);
-	v[2] = new_v3(circle.center.x - env->player.perp_cos * circle.radius / 2,
-			circle.center.y - env->player.perp_sin * circle.radius / 2,
+	v[2] = new_v3(circle.center.x - env->player.camera.perp_cos * circle.radius / 2,
+			circle.center.y - env->player.camera.perp_sin * circle.radius / 2,
 			0);
-	v[1] = new_v3(circle.center.x + env->player.angle_cos * circle.radius * 2,
-			circle.center.y + env->player.angle_sin * circle.radius * 2,
+	v[1] = new_v3(circle.center.x + env->player.camera.angle_cos * circle.radius * 2,
+			circle.center.y + env->player.camera.angle_sin * circle.radius * 2,
 			0);
 	fill_triangle(v, 0xFFFF0000, env);
 	/*if (env->editor.selected_player == 1)

@@ -6,7 +6,7 @@
 /*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/08/30 14:19:25 by gaerhard          #+#    #+#             */
-/*   Updated: 2019/09/04 14:16:48 by lnicosia         ###   ########.fr       */
+/*   Updated: 2019/09/22 11:41:33 by gaerhard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ int		init_enemies(t_env *env, t_map_parser *parser)
 			if (*line != ' ')
 				return (invalid_char("at enemies number", "space of a digit",
 							*line, parser));
-				line = skip_spaces(line);
+			line = skip_spaces(line);
 			if (!*line)
 				return (missing_data("before enemies number", parser));
 			if (valid_number(line,parser) == WRONG_CHAR)
@@ -56,7 +56,7 @@ int		init_enemies(t_env *env, t_map_parser *parser)
 			return (0);
 		}
 		else if (*line != '#')
-				return (missing_data("enemies number declaration", parser));
+			return (missing_data("enemies number declaration", parser));
 		ft_strdel(&tmp);
 	}
 	return (0);

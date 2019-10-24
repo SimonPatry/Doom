@@ -1,13 +1,13 @@
 /* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   check_bmp_parsing.c                                :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: lnicosia <marvin@42.fr>                    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2019/05/01 11:53:47 by lnicosia          #+#    #+#             */
-/*   Updated: 2019/07/24 14:55:39 by sipatry          ###   ########.fr       */
-/*                                                                            */
+/*																			*/
+/*														:::	  ::::::::   */
+/*   check_bmp_parsing.c								:+:	  :+:	:+:   */
+/*													+:+ +:+		 +:+	 */
+/*   By: lnicosia <marvin@42.fr>					+#+  +:+	   +#+		*/
+/*												+#+#+#+#+#+   +#+		   */
+/*   Created: 2019/05/01 11:53:47 by lnicosia		  #+#	#+#			 */
+/*   Updated: 2019/07/24 14:55:39 by sipatry		  ###   ########.fr	   */
+/*																			*/
 /* ************************************************************************** */
 
 #include "env.h"
@@ -15,9 +15,6 @@
 
 void	check_bmp_parsing(t_bmp_parser parser)
 {
-	int	i;
-
-	i = 0;
 	ft_printf("{yellow}");
 	ft_printf("File size = %d bytes\n", parser.size);
 	ft_printf("Image offset = %d\n", parser.start);

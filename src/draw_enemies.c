@@ -1,22 +1,45 @@
 /* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   draw_enemies.c                                     :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2019/06/20 15:04:12 by lnicosia          #+#    #+#             */
-/*   Updated: 2019/09/04 17:41:10 by sipatry          ###   ########.fr       */
-/*                                                                            */
+/*																			*/
+/*														:::	  ::::::::   */
+/*   draw_enemies.c									 :+:	  :+:	:+:   */
+/*													+:+ +:+		 +:+	 */
+/*   By: gaerhard <gaerhard@student.42.fr>		  +#+  +:+	   +#+		*/
+/*												+#+#+#+#+#+   +#+		   */
+/*   Created: 2019/06/20 15:04:12 by lnicosia		  #+#	#+#			 */
+/*   Updated: 2019/09/30 13:40:50 by gaerhard		 ###   ########.fr	   */
+/*																			*/
 /* ************************************************************************** */
 
 #include "env.h"
 #include "render.h"
 
+void		update_enemies_z(t_env *env)
+{
+	int	i;
+
+	i = 0;
+	while (i < env->nb_enemies)
+	{
+		if (env->enemies[i].sector == env->sectors[env->selected_floor].num)
+			env->enemies[i].pos.z = get_floor_at_pos(env->sectors[env->selected_floor], new_v2(env->enemies[i].pos.x, env->enemies[i].pos.y), env);
+		i++;
+	}
+}
+
 static int	get_sprite_direction(t_enemies enemy)
 {
 	double	angle;
 
+	/*
+	** 0 = front sprite
+	** 1 = front right sprite
+	** 2 = right sprite
+	** 3 = back right sprite
+	** 4 = back sprite
+	** 5 = back left sprite
+	** 6 = left sprite
+	** 7 = front left
+	*/
 	angle = (int)((atan2(enemy.translated_pos.z, enemy.translated_pos.x)) * CONVERT_DEGREES) % 360;
 	if (angle >= enemy.angle - 22.5 && angle < enemy.angle + 22.5)
 		return (4);
@@ -60,7 +83,7 @@ static void		*enemy_loop(void *param)
 {
 	t_env			*env;
 	t_enemies		enemy;
-	t_render_enemy	erender;
+	t_render_object	orender;
 	t_sprite		sprite;
 	int				x;
 	int				y;
@@ -76,48 +99,49 @@ static void		*enemy_loop(void *param)
 	double			*zbuffer;
 
 
-	erender = ((t_enemy_thread*)param)->erender;
+	orender = ((t_enemy_thread*)param)->orender;
 	env = ((t_enemy_thread*)param)->env;
 	enemy = ((t_enemy_thread*)param)->enemy;
 	sprite = env->sprites[enemy.sprite];
 	texture = env->textures[sprite.texture];
 	pixels = env->sdl.texture_pixels;
 	texture_pixels = texture.str;
-	zbuffer = env->depth_array;
+	zbuffer = env->zbuffer;
 	x = ((t_enemy_thread*)param)->xstart;
 	xend = ((t_enemy_thread*)param)->xend;
-	yend = erender.yend;
+	yend = orender.yend;
 	while (++x <= xend)
 	{
-		xalpha = (x - erender.x1) / erender.xrange;
-		if (sprite.reversed[erender.index])
+		xalpha = (x - orender.x1) / orender.xrange;
+		if (sprite.reversed[orender.index])
 			xalpha = 1.0 - xalpha;
-		textx = (1.0 - xalpha) * sprite.start[erender.index].x + xalpha * sprite.end[erender.index].x;
-		y = erender.ystart;
+		textx = (1.0 - xalpha) * sprite.start[orender.index].x + xalpha * sprite.end[orender.index].x;
+		y = orender.ystart;
 		while (y < yend)
 		{
-			yalpha = (y - erender.y1) / erender.yrange;
-			texty = (1.0 - yalpha) * sprite.start[erender.index].y + yalpha * sprite.end[erender.index].y;
+			yalpha = (y - orender.y1) / orender.yrange;
+			texty = (1.0 - yalpha) * sprite.start[orender.index].y + yalpha * sprite.end[orender.index].y;
 			if ((enemy.rotated_pos.z < zbuffer[x + y * env->w]
-					&& texture_pixels[textx + texty * texture.surface->w] != 0xFFC10099))
+						&& texture_pixels[textx + texty * texture.surface->w] != 0xFFC10099))
 			{
+				env->enemies[enemy.num].seen = 1;
 				if (env->editor.select && x == env->h_w && y == env->h_h)
 				{
-					//ft_printf("cc\n");
 					env->selected_wall1 = -1;
 					env->selected_wall2 = -1;
 					env->selected_floor = -1;
 					env->selected_ceiling = -1;
 					env->selected_object = -1;
 					env->selected_enemy = enemy.num;
-					env->editor.select = 0;
 					env->editor.selected_wall = -1;
 				}
 				if (!env->options.lighting)
 					pixels[x + y * env->w] = texture_pixels[textx + texty * texture.surface->w];
 				else
-					pixels[x + y * env->w] = apply_light(texture_pixels[textx + texty * texture.surface->w], erender.light);
-				if (env->editor.in_game && env->selected_enemy == enemy.num)
+					pixels[x + y * env->w] = apply_light(texture_pixels[textx + texty * texture.surface->w], orender.light_color, orender.brightness);
+				if (env->enemies[enemy.num].hit)
+					pixels[x + y * env->w] = blend_alpha(pixels[x + y * env->w], 0xFFFF0000, enemy_hurt(env, enemy.num));
+				if (env->editor.in_game && !env->editor.select && env->selected_enemy == enemy.num)
 					pixels[x + y * env->w] = blend_alpha(pixels[x + y * env->w], 0xFF00FF00, 128);
 				zbuffer[x + y * env->w] = enemy.rotated_pos.z;
 			}
@@ -127,7 +151,7 @@ static void		*enemy_loop(void *param)
 	return (NULL);
 }
 
-static void		threaded_enemy_loop(t_enemies enemy, t_render_enemy erender, t_env *env)
+static void		threaded_enemy_loop(t_enemies enemy, t_render_object orender, t_env *env)
 {
 	t_enemy_thread	et[THREADS];
 	pthread_t		threads[THREADS];
@@ -138,9 +162,9 @@ static void		threaded_enemy_loop(t_enemies enemy, t_render_enemy erender, t_env 
 	{
 		et[i].env = env;
 		et[i].enemy = enemy;
-		et[i].erender = erender;
-		et[i].xstart = erender.xstart + (erender.xend - erender.xstart) / (double)THREADS * i;
-		et[i].xend = erender.xstart + (erender.xend - erender.xstart) / (double)THREADS * (i + 1);
+		et[i].orender = orender;
+		et[i].xstart = orender.xstart + (orender.xend - orender.xstart) / (double)THREADS * i;
+		et[i].xend = orender.xstart + (orender.xend - orender.xstart) / (double)THREADS * (i + 1);
 		pthread_create(&threads[i], NULL, enemy_loop, &et[i]);
 		i++;
 	}
@@ -148,61 +172,42 @@ static void		threaded_enemy_loop(t_enemies enemy, t_render_enemy erender, t_env 
 		pthread_join(threads[i], NULL);
 }
 
-static void		draw_enemy(t_enemies *enemy, t_env *env, int death_sprite)
+static void		draw_enemy(t_camera camera, t_enemies *enemy, t_env *env, int death_sprite)
 {
-	t_render_enemy	erender;
+	t_render_object	orender;
 	t_sprite		sprite;
 
 	if (death_sprite >= 0)
-	{
 		enemy->sprite = env->sprites[enemy->sprite].death_counterpart;
-		sprite = env->sprites[enemy->sprite];
-	}
-	else
-		sprite = env->sprites[enemy->sprite];
-	project_enemy(&erender, *enemy, env);
+	orender.camera = camera;
+	sprite = env->sprites[enemy->sprite];	
+	project_enemy(&orender, *enemy, env);
 	if (sprite.oriented)
-		erender.index = get_sprite_direction(*enemy);
+		orender.index = get_sprite_direction(*enemy);
 	else if (death_sprite >= 0)
-		erender.index = death_sprite;
+		orender.index = death_sprite;
 	else
-		erender.index = 0;
-	erender.x1 = erender.screen_pos.x - sprite.size[erender.index].x / 2.0 / (enemy->rotated_pos.z / enemy->scale);
-	erender.y1 = erender.screen_pos.y - sprite.size[erender.index].y / (enemy->rotated_pos.z / enemy->scale);
-	erender.x2 = erender.screen_pos.x + sprite.size[erender.index].x / 2.0 / (enemy->rotated_pos.z / enemy->scale);
-	erender.y2 = erender.screen_pos.y;
-	erender.light = 255 - ft_clamp(enemy->rotated_pos.z * 2, 0, 255);
-	erender.light = enemy->light;
-	erender.xstart = ft_clamp(erender.x1, 0, env->w - 1);
-	erender.ystart = ft_clamp(erender.y1 + 1, 0, env->h - 1);
-	erender.xend = ft_clamp(erender.x2, 0, env->w - 1);
-	erender.yend = ft_clamp(erender.y2, 0, env->h - 1);
-	enemy->left = erender.xstart;
-	enemy->right = erender.xend;
-	enemy->top = erender.ystart;
-	enemy->bottom = erender.yend;
-	erender.xrange = erender.x2 - erender.x1;
-	erender.yrange = erender.y2 - erender.y1;
-	threaded_enemy_loop(*enemy, erender, env);
-	/*if (((orender.x1 + orender.x2) / 2) < env->w && ((orender.x1 + orender.x2) / 2) >= 0 && ((orender.y1 + orender.y2) / 2) < env->h && ((orender.y1 + orender.y2) / 2) >= 0)
-		if (env->depth_array[(orender.x1 + orender.x2) / 2 + env->w * ((orender.y1 + orender.y2) / 2)] == object->rotated_pos.z)
-			object->seen = 1;*/
+		orender.index = 0;
+	orender.x1 = orender.screen_pos.x - sprite.size[orender.index].x / 2.0 / (enemy->rotated_pos.z / enemy->scale);
+	orender.y1 = orender.screen_pos.y - sprite.size[orender.index].y / (enemy->rotated_pos.z / enemy->scale);
+	orender.x2 = orender.screen_pos.x + sprite.size[orender.index].x / 2.0 / (enemy->rotated_pos.z / enemy->scale);
+	orender.y2 = orender.screen_pos.y;
+	orender.light_color = enemy->light_color;
+	orender.brightness = enemy->brightness;
+	orender.xstart = ft_clamp(orender.x1, 0, env->w - 1);
+	orender.ystart = ft_clamp(orender.y1 + 1, 0, env->h - 1);
+	orender.xend = ft_clamp(orender.x2, 0, env->w - 1);
+	orender.yend = ft_clamp(orender.y2, 0, env->h - 1);
+	enemy->left = orender.xstart;
+	enemy->right = orender.xend;
+	enemy->top = orender.ystart;
+	enemy->bottom = orender.yend;
+	orender.xrange = orender.x2 - orender.x1;
+	orender.yrange = orender.y2 - orender.y1;
+	threaded_enemy_loop(*enemy, orender, env);
 }
-/*
-static void	get_relative_pos(t_env *env)
-{
-	int	i;
-	
-	i = 0;
-	while (i < env->nb_enemies)
-	{
-		get_translated_enemy_pos(env, &env->enemies[i]);
-		get_rotated_enemy_pos(env, &env->enemies[i]);
-		i++;
-	}
-}*/
 
-static void	threaded_get_relative_pos(t_env *env)
+static void	threaded_get_relative_pos(t_camera camera, t_env *env)
 {
 	int				i;
 	t_enemy_thread	enemies_threads[THREADS];
@@ -213,9 +218,9 @@ static void	threaded_get_relative_pos(t_env *env)
 	while (i < THREADS)
 	{
 		enemies_threads[i].env = env;
+		enemies_threads[i].camera = camera;
 		enemies_threads[i].xstart = env->nb_enemies / (double)THREADS * i;
 		enemies_threads[i].xend = env->nb_enemies / (double)THREADS * (i + 1);
-		//ft_printf("start = %d end = %d\n", object_threads[i].start, object_threads[i].end);
 		pthread_create(&threads[i], NULL, get_enemy_relative_pos, &enemies_threads[i]);
 		i++;
 	}
@@ -223,65 +228,32 @@ static void	threaded_get_relative_pos(t_env *env)
 		pthread_join(threads[i], NULL);
 }
 
-/*static void	swap_objects(t_object *o1, t_object *o2)
-{
-	t_object	tmp;
-
-	tmp = *o1;
-	*o1 = *o2;
-	*o2 = tmp;
-}
-
-static int	partition(t_object *objects, int start, int end)
-{
-	int	pivot;
-	int	i;
-	int	j;
-	
-	pivot = objects[end].rotated_pos.z;
-	i = start - 1;
-	j = start;
-	while (j < end)
-	{
-		if (objects[j].rotated_pos.z > pivot)
-		{
-			i++;
-			swap_objects(&objects[i], &objects[j]);
-		}
-		j++;
-	}
-	swap_objects(&objects[i + 1], &objects[end]);
-	return (i + 1);
-}
-
-static void	sort_objects(t_object *objects, int start, int end)
-{
-	int	pi;
-
-	if (start < end)
-	{
-		pi = partition(objects, start, end);
-		sort_objects(objects, start, pi - 1);
-		sort_objects(objects, pi + 1, end);
-	}
-}*/
-
-void		draw_enemies(t_env *env)
+void		draw_enemies(t_camera camera, t_env *env)
 {
 	int	i;
+	int dying_sprite;
 
-	threaded_get_relative_pos(env);
-	//get_relative_pos(env);
-	//sort_objects(env->objects, 0, env->nb_objects - 1);
+	threaded_get_relative_pos(camera, env);
 	i = 0;
 	while (i < env->nb_enemies)
 	{
+		dying_sprite = -1;
+		if (env->enemies[i].state == FIRING)
+			enemy_firing_anim(env, i);
 		if (env->enemies[i].rotated_pos.z > 1 && env->enemies[i].exists)
 		{
-			if (env->enemies[i].health <= 0)
-				draw_enemy(&env->enemies[i], env, dying_enemy(env, i));
-			else
-				draw_enemy(&env->enemies[i], env, -1);
+			env->enemies[i].seen = 0;
+			if (!env->editor.in_game)
+			{
+				if (env->enemies[i].health <= 0)
+					dying_sprite = dying_enemy(env, i, env->sprites[env->enemies[i].sprite].nb_death_sprites);
+				if (env->enemies[i].state == RESTING)
+					resting_enemy(env, i);
+				else if (env->enemies[i].state == PURSUING)
+					pursuing_enemy(env, i);
+			}
+			if (env->enemies[i].exists)
+				draw_enemy(camera, &env->enemies[i], env, dying_sprite);
 		}
 		i++;
 	}

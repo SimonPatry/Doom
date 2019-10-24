@@ -6,16 +6,12 @@
 /*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/05/03 12:30:04 by gaerhard          #+#    #+#             */
-/*   Updated: 2019/09/02 17:48:43 by gaerhard         ###   ########.fr       */
+/*   Updated: 2019/10/23 15:57:07 by gaerhard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef COLLISION_H
 # define COLLISION_H
-# define X1 env->vertices[env->sectors[env->player.sector].vertices[i]].x
-# define X2 env->vertices[env->sectors[env->player.sector].vertices[i + 1]].x
-# define Y1 env->vertices[env->sectors[env->player.sector].vertices[i]].y
-# define Y2 env->vertices[env->sectors[env->player.sector].vertices[i + 1]].y
 # define SECTOR_X1 env->vertices[env->sectors[sector].vertices[i]].x
 # define SECTOR_X2 env->vertices[env->sectors[sector].vertices[i + 1]].x
 # define SECTOR_Y1 env->vertices[env->sectors[sector].vertices[i]].y
@@ -26,7 +22,7 @@
 # define FUTURE_Y motion.future_y
 # define FUTURE_Z motion.future_z
 # define VERTICES_AMOUNT env->sectors[env->player.sector].nb_vertices
-# define NEIGHBOR env->sectors[env->player.sector].neighbors[i]
+# define NEIGHBOR env->sectors[motion.sector].neighbors[i]
 # define PLAYER_XPOS env->player.pos.x
 # define PLAYER_YPOS env->player.pos.y
 # define PLAYER_ZPOS env->player.pos.z
@@ -37,26 +33,26 @@
 # define RNEIGHBOR env->sectors[wall.sector_dest].neighbors[i]
 # include "env.h"
 
-typedef struct  s_movement
-{
-    double      old_z;
-    double      future_x;
-    double      future_y;
-    double      future_z;
-    int         wall_v1;
-    int         wall_v2;
-    int         old_sector;
-}               t_movement;
-
 typedef struct  s_wall
 {
-    double      x1;
-    double      x2;
-    double      y1;
-    double      y2;
+    double      x;
+    double      y;
+    double      norme;
     short       sector_or;
     short       sector_dest;  
 }               t_wall;
+
+typedef struct  s_movement
+{
+    double      future_x;
+    double      future_y;
+    double      future_z;
+    t_wall      wall;
+    int         sector;
+    double      size_2d;
+    double      eyesight;
+    t_v3        pos;
+}               t_movement;
 
 typedef struct  s_data
 {
@@ -65,12 +61,16 @@ typedef struct  s_data
 }               t_data;
 
 
-int					check_collision(t_env *env, double x_move, double y_move);
+t_v2				check_collision(t_env *env, t_v2 move, t_movement motion, int recu);
 int     			check_inside_sector(t_env *env, t_movement motion);
 void                objects_collision(t_env *env);
 void                enemy_collision(t_env *env);
+int                 hitbox_collision(t_v2 v1, t_v2 v2, t_v2 p, double size);
+int                 find_highest_sector(t_env *env, t_movement motion);
 int					diff_sign(double nb1, double nb2);
 int					diff_value(int nb1, int nb2, int a, int b);
 int					in_range(double nb, double val1, double val2);
+t_movement          new_movement(int sector, double size_2d, double eyesight, t_v3 pos);
+int                 find_lowest_sector(t_env *env, t_movement motion);
 
 #endif
