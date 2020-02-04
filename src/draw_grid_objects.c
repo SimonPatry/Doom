@@ -1,13 +1,13 @@
 /* ************************************************************************** */
-/*																			*/
-/*														:::	  ::::::::   */
-/*   draw_grid_objects.c								:+:	  :+:	:+:   */
-/*													+:+ +:+		 +:+	 */
-/*   By: lnicosia <marvin@42.fr>					+#+  +:+	   +#+		*/
-/*												+#+#+#+#+#+   +#+		   */
-/*   Created: 2019/08/21 13:41:15 by lnicosia		  #+#	#+#			 */
-/*   Updated: 2019/09/06 14:37:36 by sipatry		  ###   ########.fr	   */
-/*																			*/
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   draw_grid_objects.c                                :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: lnicosia <marvin@42.fr>                    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2020/01/27 14:54:58 by lnicosia          #+#    #+#             */
+/*   Updated: 2020/02/04 10:18:17 by lnicosia         ###   ########.fr       */
+/*                                                                            */
 /* ************************************************************************** */
 
 #include "env.h"
@@ -43,18 +43,16 @@ void	draw_grid_objects(t_env *env)
 			color = 0xFF00FF00;
 			if (env->inputs.left_click
 					&& !env->confirmation_box.state
+					&& !env->input_box.state
 					&& env->editor.start_vertex == -1
 					&& env->editor.dragged_player == -1
 					&& env->editor.dragged_object == -1
 					&& env->editor.dragged_vertex == -1
 					&& env->editor.dragged_enemy == -1)
 			{
+				reset_selection(env);
 				env->editor.dragged_object = i;
-				env->editor.selected_object = i;
-				env->editor.selected_vertex = -1;
-				env->editor.selected_sector = -1;
-				env->editor.selected_player = -1;
-				env->selected_enemy = -1;
+				env->selected_object = i;
 			}
 		}
 		else
@@ -62,7 +60,7 @@ void	draw_grid_objects(t_env *env)
 			color = 0xFFFFFF00;
 			scale = env->editor.scale / 2.0;
 		}
-		if (env->editor.selected_object == i)
+		if (env->selected_object == i)
 			color = 0xFF00FF00;
 		if (env->editor.dragged_object != i)
 			draw_circle(new_circle(color, color, center, scale), env);

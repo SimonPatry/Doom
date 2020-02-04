@@ -6,7 +6,7 @@
 /*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/04/24 14:33:55 by lnicosia          #+#    #+#             */
-/*   Updated: 2019/09/19 17:56:38 by lnicosia         ###   ########.fr       */
+/*   Updated: 2020/01/30 15:12:55 by gaerhard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,30 +34,6 @@ void	init_inputs(t_env *env)
 	env->inputs.tab = 0;
 }
 
-int		button_leftclick(t_env *env, int nb)
-{
-	int	xmax;
-	int	ymax;
-
-	if (env->button[nb].image == 30 || env->button[nb].image == 31)
-	{
-		xmax = env->button[nb].x + 40;
-		ymax = env->button[nb].y + 40;
-	}
-	else
-	{
-		xmax = env->button[nb].x + 150;
-		ymax = env->button[nb].y + 150;
-	}
-	if ((env->sdl.mx >= env->button[nb].x
-		&& env->sdl.mx <= xmax)
-		&& (env->sdl.my >=  env->button[nb].y
-		&& env->sdl.my <= ymax))
-		return (1);
-	else
-		return (0);
-}
-
 void	set_inputs(t_env *env, int mode)
 {
 	if (env->sdl.event.key.keysym.sym == env->keys.forward
@@ -76,7 +52,8 @@ void	set_inputs(t_env *env, int mode)
 		env->inputs.plus = mode;
 	if (env->sdl.event.key.keysym.sym == env->keys.minus)
 		env->inputs.minus = mode;
-	if (env->sdl.event.key.keysym.sym == env->keys.shift)
+	if (env->sdl.event.key.keysym.sym == env->keys.shift
+			|| env->sdl.event.key.keysym.sym == env->keys.shift2)
 		env->inputs.shift = mode;
 	if (env->sdl.event.key.keysym.sym == env->keys.space)
 		env->inputs.space = mode;
@@ -108,7 +85,18 @@ void	set_inputs(t_env *env, int mode)
 		env->inputs.minus1 = mode;
 	if (env->sdl.event.key.keysym.sym == env->keys.equals)
 		env->inputs.equals = mode;
-
+	if (env->sdl.event.key.keysym.sym == env->keys.p)
+		env->inputs.p = mode;
+	if (env->sdl.event.key.keysym.sym == env->keys.e)
+		env->inputs.e = mode;
+	if (env->sdl.event.key.keysym.sym == env->keys.home)
+		env->inputs.home = mode;
+	if (env->sdl.event.key.keysym.sym == env->keys.end)
+		env->inputs.end = mode;
+	if (env->sdl.event.key.keysym.sym == env->keys.a)
+		env->inputs.a = mode;
+	if (env->sdl.event.key.keysym.sym == env->keys.lgui)
+		env->inputs.lgui = mode;
 }
 
 void	update_inputs(t_env *env)

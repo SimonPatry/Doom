@@ -6,21 +6,21 @@
 /*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/06/10 15:07:34 by gaerhard          #+#    #+#             */
-/*   Updated: 2019/09/26 14:30:18 by gaerhard         ###   ########.fr       */
+/*   Updated: 2020/01/31 13:44:05 by gaerhard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "env.h"
 
-int     damage_done(t_env env, int i)
+int     damage_done(t_env env, double rotated_pos_z)
 {
 	if (env.weapons[env.player.curr_weapon].splash)
-		return ((int)(env.weapons[env.player.curr_weapon].damage / (env.enemies[i].rotated_pos.z / 4 + 1)));
+		return ((int)(env.weapons[env.player.curr_weapon].damage / (rotated_pos_z / 4 + 1)));
 	else
 		return (env.weapons[env.player.curr_weapon].damage);
 }
 
-int		hitscan(t_env *env, int i)
+int		hitscan_enemies(t_env *env, int i)
 {
 	if (env->enemies[i].exists && env->enemies[i].seen)
 	{
@@ -39,6 +39,25 @@ int		hitscan(t_env *env, int i)
 	return (-1);
 }
 
+int		hitscan_objects(t_env *env, int i)
+{
+	if (env->objects[i].exists && env->objects[i].seen)
+	{
+		if ((env->objects[i].left - env->objects[i].left) * (env->h / 2 - env->objects[i].bottom) - (env->w / 2 - env->objects[i].left) * (env->objects[i].top - env->objects[i].bottom) < 0)
+			return (0);
+		if ((env->objects[i].right - env->objects[i].left) * (env->h / 2 - env->objects[i].top) - (env->w / 2 - env->objects[i].left) * (env->objects[i].top - env->objects[i].top) < 0)
+			return (0);
+		if ((env->objects[i].right - env->objects[i].right) * (env->h / 2 - env->objects[i].top) - (env->w / 2 - env->objects[i].right) * (env->objects[i].bottom - env->objects[i].top) < 0)
+			return (0);
+		if ((env->objects[i].left - env->objects[i].right) * (env->h / 2 - env->objects[i].bottom) - (env->w / 2 - env->objects[i].right) * (env->objects[i].bottom - env->objects[i].bottom) < 0)
+			return (0);
+		if (env->objects[i].rotated_pos.z > env->weapons[env->player.curr_weapon].range || env->objects[i].rotated_pos.z < 0)
+			return (0);
+		return (1);
+	}
+	return (-1);
+}
+
 void    shot(t_env *env)
 {
 	int	i;
@@ -46,21 +65,45 @@ void    shot(t_env *env)
 
 	i = 0;
 	hit = 0;
-	while (i < env->nb_enemies)
+	if (env->weapons[env->player.curr_weapon].ammo_type == ROCKET)
 	{
-		if (hitscan(env, i) == 1)
+		create_projectile(env, new_projectile_data(env->player.pos, env->player.camera.angle, 1, 1),
+			new_projectile_stats(0.5, env->weapons[env->player.curr_weapon].damage, 0.8, env->player.eyesight - 0.4),
+			env->player.camera.angle_z);
+	}
+	else
+	{
+		while (i < env->nb_enemies)
 		{
-			if (env->options.test)
-				ft_printf("I hit enemy nb %d | enemy_life before = %d |", i, env->enemies[i].health);
-			env->enemies[i].health -= damage_done(*env, i);
-			hit = 1;
-			if (env->enemies[i].health <= 0)
-				env->player.killed++;
-			if (env->options.test)
-				ft_printf(" and after = %d\n", env->enemies[i].health);
-			env->enemies[i].hit = 1;
+			if (hitscan_enemies(env, i) == 1)
+			{
+				env->enemies[i].health -= damage_done(*env, env->enemies[i].rotated_pos.z);
+				hit = 1;
+				if (env->enemies[i].health <= 0)
+					env->player.killed++;
+				env->enemies[i].hit = 1;
+			}
+			i++;
 		}
-		i++;
+		i = 0;
+		while (i < env->nb_objects)
+		{
+			if (env->objects[i].destructible && env->objects[i].exists)
+			{
+				if (hitscan_objects(env, i) == 1)
+				{
+					env->objects[i].health -= damage_done(*env, env->objects[i].rotated_pos.z);
+					if (env->objects[i].explodes && env->objects[i].health <= 0)
+					{
+						create_explosion(env,
+							new_explosion_data(env->objects[i].pos, env->objects[i].explosion_size, env->objects[i].damage, env->object_sprites[env->objects[i].sprite].death_counterpart), 0);
+						env->nb_explosions++;
+						env->objects[i].exists = 0;
+					}
+				}
+			}
+			i++;
+		}
 	}
 	if (hit)
 		env->player.touched += 1;
@@ -77,25 +120,46 @@ void    draw_weapon(t_env *env, int sprite)
 	int			texture_h;
 	Uint32		*pixels;
 	Uint32		*texture_pixels;
+	t_sector	sector;
 
 	pixels = env->sdl.texture_pixels;
-	texture_pixels = env->textures[sprite].str;
-	texture_w = env->textures[sprite].surface->w;
-	texture_h = env->textures[sprite].surface->h;
+	texture_pixels = env->sprite_textures[sprite].str;
+	texture_w = env->sprite_textures[sprite].surface->w;
+	texture_h = env->sprite_textures[sprite].surface->h;
 	window_w = (int)(env->w - texture_w) / 1.5;
 	window_h = (env->h - texture_h) + env->weapons[0].weapon_switch;
-	x = 0;
-	while (x < texture_w)
+	sector = env->sectors[env->player.sector];
+	y = 0;
+	while (y < texture_h)
 	{
-		y = 0;
-		while (y < texture_h  && (window_h + y) < env->h)
+		x = 0;
+		while (x < texture_w  && (window_h + y) < env->h)
 		{
 			if (texture_pixels[x + texture_w * y] != 0xFFC10099)
-				pixels[(window_w + x) + env->w * (window_h + y)] = 
-					texture_pixels[x + texture_w * y];
-			y++;
+			{
+				if (!env->options.lighting
+					|| (!sector.brightness && !sector.intensity))
+					pixels[(window_w + x) + env->w * (window_h + y)] = 
+						texture_pixels[x + texture_w * y];
+				else if (!sector.brightness)
+					pixels[(window_w + x) + env->w * (window_h + y)] = 
+						apply_light_color(texture_pixels[x + texture_w * y],
+								sector.light_color,
+								sector.intensity);
+				else if (!sector.intensity)
+					pixels[(window_w + x) + env->w * (window_h + y)] = 
+						apply_light_brightness(texture_pixels[x + texture_w * y],
+								sector.brightness);
+				else
+					pixels[(window_w + x) + env->w * (window_h + y)] = 
+						apply_light_both(texture_pixels[x + texture_w * y],
+								sector.light_color,
+								sector.intensity,
+								sector.brightness);
+			}
+			x++;
 		}
-		x++;
+		y++;
 	}
 }
 
@@ -103,22 +167,17 @@ void    weapon_animation(t_env *env, int nb)
 {
 	if (env->shot.start == 0)
 	{
-		shot(env);
 		env->shot.on_going = 1;
 		env->shot.start = SDL_GetTicks();
-		if (env->weapons[nb].ammo <= 0)
+		if (env->weapons[nb].ammo > 0)
 		{
-			env->weapons[nb].no_ammo = 1;
-			Mix_PlayChannel(2, env->weapons[nb].empty, 0);
-		}
-		else
-		{
-			env->weapons[nb].no_ammo = 0;
-			Mix_PlayChannel(2, env->weapons[nb].sound, 0);
+			shot(env);
+			play_sound(env, &env->sound.player_shots_chan, env->weapons[nb].shot,
+				env->sound.ambient_vol);
 			env->weapons[nb].ammo--;
 		}
 	}
-	if (!env->weapons[nb].no_ammo)
+	if (env->weapons[nb].ammo)
 	{
 		if (env->time.milli_s > env->shot.start + 70 && ((env->time.milli_s - env->shot.start) / 70 < env->weapons[nb].nb_sprites))
 			draw_weapon(env, env->weapons[nb].first_sprite + (int)((env->time.milli_s - env->shot.start) / 70));
@@ -129,7 +188,7 @@ void    weapon_animation(t_env *env, int nb)
 	{
 		draw_weapon(env, env->weapons[nb].first_sprite);
 	}
-	if ((int)((env->time.milli_s - env->shot.start)) >= env->weapons[nb].nb_sprites * 70)
+	if ((int)((env->time.milli_s - env->shot.start)) >= env->weapons[nb].nb_sprites * 10)
 	{
 		env->shot.start = 0;
 		env->shot.on_going = 0;
@@ -139,7 +198,11 @@ void    weapon_animation(t_env *env, int nb)
 void    weapon_change(t_env *env)
 {
 	int time_spent;
+	int	next_weapon;
 
+	next_weapon = next_possessed_weapon(env);
+	if (next_weapon < 0)
+		return ;
 	if (env->weapon_change.start == 0)
 	{
 		env->weapon_change.start = SDL_GetTicks();
@@ -150,10 +213,11 @@ void    weapon_change(t_env *env)
 		env->weapons[0].weapon_switch  = 75 * (int)(time_spent / 70);
 	if (time_spent > 4 * 70)
 	{
-		if (env->sdl.event.wheel.y > 0)
+		env->player.curr_weapon = next_weapon;
+		/*if (env->sdl.event.wheel.y > 0)
 			env->player.curr_weapon = (env->player.curr_weapon >= NB_WEAPONS - 1 ? 0 : env->player.curr_weapon + 1);
 		else if (env->sdl.event.wheel.y < 0)
-			env->player.curr_weapon = (env->player.curr_weapon <= 0 ? NB_WEAPONS - 1 : env->player.curr_weapon - 1);
+			env->player.curr_weapon = (env->player.curr_weapon <= 0 ? NB_WEAPONS - 1 : env->player.curr_weapon - 1);*/
 		env->weapons[0].weapon_switch = 0;
 		env->weapon_change.start = 0;
 		env->weapon_change.on_going = 0;
@@ -170,4 +234,45 @@ void    print_ammo(t_env *env)
 	print_text(new_point(env->h - env->h / 12, env->w - env->w / 19), new_printable_text(str, env->sdl.fonts.amazdoom50, 0xA1A1A100, 0), env);
 	str = ft_sitoa(env->weapons[env->player.curr_weapon].max_ammo);
 	print_text(new_point(env->h - env->h / 12, env->w - env->w / 24), new_printable_text(str, env->sdl.fonts.amazdoom50, 0xA1A1A100, 0), env);
+}
+
+int		aoe_damage(double distance, double radius, int damage)
+{
+	double	percentage;
+
+	percentage = (100 - (distance / radius) * 100) / 100;
+	if (percentage < 0.3)
+		percentage = 0.3;
+	return ((int)(damage * percentage));
+}
+
+int		next_possessed_weapon(t_env *env)
+{
+	int i;
+
+	if (env->sdl.event.wheel.y > 0)
+	{
+		i = (env->player.curr_weapon == NB_WEAPONS - 1) ? 0 : env->player.curr_weapon + 1;
+		while (i != env->player.curr_weapon)
+		{
+			if (env->weapons[i].possessed)
+				return (i);
+			i++;
+			if (i >= NB_WEAPONS)
+				i = 0;
+		}
+	}
+	if (env->sdl.event.wheel.y < 0)
+	{
+		i = (env->player.curr_weapon == 0) ? NB_WEAPONS - 1 : env->player.curr_weapon - 1;
+		while (i != env->player.curr_weapon)
+		{
+			if (env->weapons[i].possessed)
+				return (i);
+			i--;
+			if (i < 0)
+				i = NB_WEAPONS - 1;
+		}
+	}
+	return (-1);
 }

@@ -6,7 +6,7 @@
 /*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/06/20 15:50:14 by sipatry           #+#    #+#             */
-/*   Updated: 2019/10/23 16:18:42 by gaerhard         ###   ########.fr       */
+/*   Updated: 2020/01/31 18:18:09 by lnicosia         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,8 +16,13 @@ int	draw_render(t_camera *camera, t_env *env)
 {
 	if (draw_walls(camera, env))
 		return (crash("Failed to draw walls\n", env));
-	draw_objects(*camera, env);
-	draw_enemies(*camera, env);
+	if (draw_objects(*camera, env))
+		return (-1);
+	if (draw_projectiles(*camera, env))
+		return (-1);
+	draw_explosions(*camera, env);
+	if (draw_enemies(*camera, env))
+		return (-1);
 	draw_players(*camera, env);
 	return (0);
 }
@@ -39,14 +44,11 @@ int	draw_game(t_env *env)
 		fps(env);
 	if (env->options.test)
 		print_debug(env);
-	if (env->options.show_minimap)
-		minimap(env);
 	game_time(env);
 	animations(env);
 	if (env->player.health > 0)
 	{
 		draw_hud(env);
-		interactions(env);
 		print_ammo(env);
 	}
 	else
@@ -68,13 +70,19 @@ int	draw_game(t_env *env)
 			i++;
 		}
 	}
+	minimap(env);
+	if (env->hovered_wall_sprite_sprite != -1
+		&& env->hovered_wall_sprite_wall != -1
+		&& env->hovered_wall_sprite_sector != -1)
+		print_press_text(env);
 	if (env->confirmation_box.state)
-		draw_confirmation_box(env->confirmation_box, env);
+		draw_confirmation_box(&env->confirmation_box, env);
 	if (env->options.zbuffer)
 		update_screen_zbuffer(env);
 	else
 		update_screen(env);
 	if (env->player.health > 0)
 		view(env);
+	env->first_frame = 1;
 	return (0);
 }

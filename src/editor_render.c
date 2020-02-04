@@ -6,7 +6,7 @@
 /*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/29 16:07:41 by lnicosia          #+#    #+#             */
-/*   Updated: 2019/10/23 16:14:56 by gaerhard         ###   ########.fr       */
+/*   Updated: 2020/01/31 15:38:36 by lnicosia         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,32 +14,27 @@
 
 int		editor_render(t_env *env)
 {
-	if (env->inputs.enter)
-	{
-		env->editor.in_game = 0;
-		env->selected_floor = -1;
-		env->selected_ceiling = -1;
-		env->selected_object = -1;
-		env->selected_enemy = -1;
-		env->selected_wall1 = -1;
-		env->selected_wall2 = -1;
-		env->inputs.enter = 0;
-		SDL_SetRelativeMouseMode(0);
-		return (0);
-	}
 	reset_clipped(env);
-	keys(env);
+	if (!env->input_box.state)
+	{
+		if (editor_3d_keys(env))
+			return (-1);
+	}
 	animations(env);
 	if (draw_walls(&env->player.camera, env))
 		return (crash("Failed to draw walls\n", env));
-	draw_objects(env->player.camera, env);
-	draw_enemies(env->player.camera, env);
+	if (draw_objects(env->player.camera, env))
+		return (-1);
+	if (draw_enemies(env->player.camera, env))
+		return (-1);
 	draw_crosshair(env);
 	if (env->options.show_fps)
 		fps(env);
 	game_time(env);
-	interactions(env);
-	view(env);
+	minimap(env);
+	if (!env->input_box.state && !env->editor.tab)
+		view(env);
 	env->editor.select = 0;
+	FMOD_System_Update(env->sound.system);
 	return (0);
 }

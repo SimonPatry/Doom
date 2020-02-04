@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   libft.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lnicosia <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/11/07 11:01:13 by lnicosia          #+#    #+#             */
-/*   Updated: 2019/08/27 12:29:03 by lnicosia         ###   ########.fr       */
+/*   Updated: 2020/01/23 11:48:19 by gaerhard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,11 +43,24 @@ typedef struct	s_v3
 	double		z;
 }				t_v3;
 
+typedef struct	s_circle_vars
+{
+	double		a;
+	double		b;
+	double		c;
+}				t_circle_vars;
+
 typedef	struct		s_segment
 {
 	t_v2			p1;
 	t_v2			p2;
 }					t_segment;
+
+typedef	struct		s_plane
+{
+	t_v3			norm;
+	double			d;
+}					t_plane;
 
 void			ft_putchar(char c);
 void			ft_putstr(char const *s);
@@ -111,10 +124,12 @@ char			*ft_sitoa(int nbr);
 t_list			*ft_lstnew(void const *content, size_t content_size);
 void			ft_lstdelone(t_list **alst, void (*del)(void*, size_t));
 void			ft_lstdel(t_list **alst, void (*del)(void *, size_t));
+void			ft_lstdelfront(t_list **alst);
 void			ft_lstadd(t_list **alst, t_list *new);
 void			ft_lstiter(t_list *lst, void (*f)(t_list *elem));
 t_list			*ft_lstmap(t_list *lst, t_list *(*f)(t_list *elem));
 int				ft_lstlen(t_list *lst);
+void				ft_lstpopfront(t_list **alst);
 void			ft_lstpushback(t_list **alst, t_list *new);
 int				ft_abs(int	nb);
 int				ft_clamp(int nb, int min, int max);
@@ -144,5 +159,9 @@ t_v2			get_intersection(t_v2 p1, t_v2 p2, t_v2 p3, t_v2 p4);
 int				segments_intersect(t_v2 p1, t_v2 p2, t_v2 p3, t_v2 p4);
 int				check_line_intersection(t_v2 p1, t_v2 p2, t_v2 p3, t_v2 p4);
 int				custom_error(const char *message);
+t_list			*ft_lstdelnode(t_list **list, t_list *node);
+t_plane			new_plane(t_v3 p1, t_v3 p2, t_v3 p3);
+t_v3			get_intersection_line_plane(t_v3 p1, t_v3 p2, t_plane plane,
+t_v3 p3);
 
 #endif

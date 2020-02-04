@@ -1,13 +1,13 @@
 /* ************************************************************************** */
-/*																			*/
-/*														:::	  ::::::::   */
-/*   bmp_parse_header.c								 :+:	  :+:	:+:   */
-/*													+:+ +:+		 +:+	 */
-/*   By: lnicosia <marvin@42.fr>					+#+  +:+	   +#+		*/
-/*												+#+#+#+#+#+   +#+		   */
-/*   Created: 2019/05/01 13:16:04 by lnicosia		  #+#	#+#			 */
-/*   Updated: 2019/07/24 14:54:52 by sipatry		  ###   ########.fr	   */
-/*																			*/
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   bmp_parse_header.c                                 :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2019/11/08 17:43:35 by gaerhard          #+#    #+#             */
+/*   Updated: 2019/11/08 17:43:40 by gaerhard         ###   ########.fr       */
+/*                                                                            */
 /* ************************************************************************** */
 
 #include "env.h"
@@ -70,7 +70,7 @@ int	parse_image_header(int fd, t_bmp_parser *parser)
 	int				ret;
 	unsigned char	*image_header;
 
-	if (!(image_header = (unsigned char*)malloc(sizeof(unsigned char)
+	if (!(image_header = (unsigned char*)ft_memalloc(sizeof(unsigned char)
 					* (parser->image_header_size - 4))))
 		return (ft_printf("Could not malloc image_header array\n"));
 	if ((ret = read(fd, image_header, parser->image_header_size - 4)) > 0)

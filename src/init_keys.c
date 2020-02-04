@@ -1,13 +1,13 @@
 /* ************************************************************************** */
-/*																			*/
-/*														:::	  ::::::::   */
-/*   init_keys.c										:+:	  :+:	:+:   */
-/*													+:+ +:+		 +:+	 */
-/*   By: lnicosia <marvin@42.fr>					+#+  +:+	   +#+		*/
-/*												+#+#+#+#+#+   +#+		   */
-/*   Created: 2019/04/24 15:22:49 by lnicosia		  #+#	#+#			 */
-/*   Updated: 2019/09/19 17:56:12 by lnicosia		 ###   ########.fr	   */
-/*																			*/
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   init_keys.c                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: sipatry <sipatry@student.42.fr>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2019/04/24 15:22:49 by lnicosia          #+#    #+#             */
+/*   Updated: 2020/01/07 13:45:04 by sipatry          ###   ########.fr       */
+/*                                                                            */
 /* ************************************************************************** */
 
 #include "env.h"
@@ -17,6 +17,7 @@ void	init_keys(t_env *env)
 	ft_printf("Initializing player keys..\n");
 	env->keys.forward = SDLK_w;
 	env->keys.s = SDLK_s;
+	env->keys.e = SDLK_e;
 	env->keys.left = SDLK_a;
 	env->keys.right = SDLK_d;
 	env->keys.forward2 = SDLK_UP;
@@ -26,6 +27,7 @@ void	init_keys(t_env *env)
 	env->keys.plus = SDLK_KP_PLUS;
 	env->keys.minus = SDLK_KP_MINUS;
 	env->keys.shift = SDLK_LSHIFT;
+	env->keys.shift2 = SDLK_RSHIFT;
 	env->keys.ctrl = SDLK_LCTRL;
 	env->keys.space = SDLK_SPACE;
 	env->keys.up = SDLK_PAGEUP;
@@ -39,4 +41,9 @@ void	init_keys(t_env *env)
 	env->keys.period = SDLK_PERIOD;
 	env->keys.minus1 = SDLK_MINUS;
 	env->keys.equals = SDLK_EQUALS;
+	env->keys.p = SDLK_p;
+	env->keys.end = SDLK_END;
+	env->keys.home = SDLK_HOME;
+	env->keys.a = 'a';
+	env->keys.lgui = SDLK_LGUI;
 }

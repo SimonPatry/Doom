@@ -6,7 +6,7 @@
 /*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/22 17:14:57 by sipatry           #+#    #+#             */
-/*   Updated: 2019/10/23 16:15:03 by gaerhard         ###   ########.fr       */
+/*   Updated: 2020/02/03 10:03:04 by lnicosia         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,14 +21,30 @@ int		editor(t_env *env)
 		SDL_GetMouseState(&env->sdl.mx, &env->sdl.my);
 		while (SDL_PollEvent(&env->sdl.event))
 		{
-			if (env->sdl.event.type == SDL_QUIT || (env->sdl.event.type == SDL_KEYUP && env->sdl.event.key.keysym.sym == SDLK_ESCAPE))
+			if (env->sdl.event.type == SDL_QUIT
+				|| (env->sdl.event.type == SDL_KEYUP
+				&& env->sdl.event.key.keysym.sym == SDLK_ESCAPE))
 				env->running = 0;
 			else if (env->sdl.event.type == SDL_KEYDOWN
-					|| env->sdl.event.type == SDL_KEYUP || env->sdl.event.type == SDL_MOUSEBUTTONDOWN
-					|| env->sdl.event.type == SDL_MOUSEBUTTONUP || env->sdl.event.type == SDL_MOUSEWHEEL)
+					|| env->sdl.event.type == SDL_KEYUP
+					|| env->sdl.event.type == SDL_MOUSEBUTTONDOWN
+					|| env->sdl.event.type == SDL_MOUSEBUTTONUP
+					|| env->sdl.event.type == SDL_MOUSEWHEEL)
 				update_inputs(env);
-			if (env->sdl.event.type == SDL_KEYUP || env->sdl.event.type == SDL_MOUSEBUTTONUP)
-				editor_keyup(env);
+			if (!env->input_box.state && (env->sdl.event.type == SDL_KEYUP
+				|| env->sdl.event.type == SDL_MOUSEBUTTONUP))
+			{
+				if (!env->editor.in_game)
+				{
+					if (editor_keyup(env))
+						return (-1);
+				}
+				else
+				{
+					if (editor_3d_keyup(env))
+						return (-1);
+				}
+			}
 			if (!env->editor.in_game && env->sdl.event.type == SDL_MOUSEWHEEL)
 			{
 				if (env->sdl.event.wheel.y > 0 && env->editor.scale * 1.1 < 100)
@@ -36,23 +52,31 @@ int		editor(t_env *env)
 					env->editor.center.x = env->sdl.mx + ((env->editor.center.x - env->sdl.mx) * 1.1);
 					env->editor.center.y = env->sdl.my + ((env->editor.center.y - env->sdl.my) * 1.1);
 					env->editor.scale *= 1.1;
-				}
+			}
 				if (env->sdl.event.wheel.y < 0 && env->editor.scale / 1.1 > 1)
 				{
-				
+	
 					env->editor.center.x = env->sdl.mx + ((env->editor.center.x - env->sdl.mx) / 1.1);
 					env->editor.center.y = env->sdl.my + ((env->editor.center.y - env->sdl.my) / 1.1);
 					env->editor.scale /= 1.1;
 				}
 			}
+			if (env->input_box.state)
+			{
+				if (input_box_keys(&env->input_box, env))
+					return (-1);
+			}
 		}
 		if (!env->editor.in_game)
 		{
+			if (!env->input_box.state)
+			{
+				if (editor_keys(env))
+					return (ft_printf("Error in inputs\n"));
+			}
 			draw_grid(env);
 			draw_grid_vertices(env);
-			if (editor_keys(env))
-				return (ft_printf("Error in inputs\n"));
-			if (env->editor.new_player || env->editor.dragged_player == 1)
+			if (env->editor.player_exist || env->editor.dragged_player == 1)
 				draw_grid_player(env);
 			if (env->editor.dragged_object != -1 || env->nb_objects > 0)
 				draw_grid_objects(env);
@@ -67,13 +91,19 @@ int		editor(t_env *env)
 			if (editor_render(env))
 				return (crash("Render function failed\n", env));
 		}
+		if (!env->input_box.state && env->saving)
+			save_map(env);
 		editor_hud(env);
 		if (env->confirmation_box.state)
-			draw_confirmation_box(env->confirmation_box, env);
+			draw_confirmation_box(&env->confirmation_box, env);
+		if (env->input_box.state)
+			draw_input_box(&env->input_box, env);
 		if (env->options.zbuffer && env->editor.in_game)
 			update_screen_zbuffer(env);
 		else
 			update_screen(env);
+		if (env->editor.game)
+			editor_start_game(env);
 	}
 	free_all(env);
 	return (0);

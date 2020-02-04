@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: lnicosia <marvin@42.fr>                    +#+  +:+       +#+         #
+#    By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/12/06 15:56:21 by lnicosia          #+#    #+#              #
-#    Updated: 2019/08/22 11:30:55 by lnicosia         ###   ########.fr        #
+#    Updated: 2020/01/27 14:59:40 by lnicosia         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -37,7 +37,8 @@ SRC_RAW = ft_memccpy.c ft_memcpy.c ft_memset.c ft_bzero.c ft_memmove.c \
 		  ft_clamp.c ft_fclamp.c ft_fclamp.c ft_atof.c ft_getlen.c \
 		  ft_sitoa.c ft_realloc.c ft_getsize.c ft_delindex.c ft_perror.c \
 		  ft_lstcontains.c vector_utils.c segments_intersect.c \
-		  get_intersection.c
+		  get_intersection.c ft_lstpopfront.c ft_lstdelfront.c \
+		  ft_lstdelnode.c new_plane.c get_intersection_line_plane.c \
 
 HEADERS = libft.h
 
@@ -57,12 +58,24 @@ INCLUDES = $(addprefix $(INCLUDES_DIR)/, $(HEADERS))
 PRINTF_SRC = $(addprefix $(PRINTF_DIR)/, $(PRINTF_SRC_RAW))
 PRINTF_OBJ = $(addprefix $(OBJ_DIR)/, $(PRINTF_SRC_RAW:.c=.o))
 
-CFLAGS = -Wall -Wextra -Werror -I $(INCLUDES_DIR) -I $(PRINTF_DIR) #-flto -O3
+CFLAGS = -Wall -Wextra -Werror -I $(INCLUDES_DIR) -I $(PRINTF_DIR) \
+			-Ofast -flto\
+			#-fsanitize=address -g3 \
 
 RED := "\033[0;31m"
 GREEN := "\033[0;32m"
 CYAN := "\033[0;36m"
 RESET :="\033[0m"
+
+ifneq ($(OS), Windows_NT)
+	UNAME_S = $(shell uname -s)
+	ifeq ($(UNAME_S),Darwin)
+		CFLAGS += -flto
+	else
+		echo "Can only compile on Windows or MacOS"
+		exit 1
+	endif
+endif
 
 all: $(BIN_DIR)/$(NAME)
 

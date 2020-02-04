@@ -1,13 +1,13 @@
 /* ************************************************************************** */
-/*																			*/
-/*														:::	  ::::::::   */
-/*   bmp_parse_color_table.c							:+:	  :+:	:+:   */
-/*													+:+ +:+		 +:+	 */
-/*   By: lnicosia <marvin@42.fr>					+#+  +:+	   +#+		*/
-/*												+#+#+#+#+#+   +#+		   */
-/*   Created: 2019/05/02 11:58:19 by lnicosia		  #+#	#+#			 */
-/*   Updated: 2019/07/24 14:54:44 by sipatry		  ###   ########.fr	   */
-/*																			*/
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   bmp_parse_color_table.c                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2019/11/12 18:32:31 by lnicosia          #+#    #+#             */
+/*   Updated: 2019/11/13 16:48:26 by gaerhard         ###   ########.fr       */
+/*                                                                            */
 /* ************************************************************************** */
 
 #include "env.h"
@@ -19,10 +19,10 @@ static int	parse_color_table(int fd, t_bmp_parser *parser)
 	int				i;
 	unsigned char	*str;
 
-	if (!(parser->colors = (unsigned int*)malloc(sizeof(unsigned int)
+	if (!(parser->colors = (unsigned int*)ft_memalloc(sizeof(unsigned int)
 					* parser->color_used)))
 		return (ft_printf("Could not malloc colors array\n"));
-	if (!(str = (unsigned char*)malloc(sizeof(unsigned char)
+	if (!(str = (unsigned char*)ft_memalloc(sizeof(unsigned char)
 					* parser->color_used * 4)))
 	{
 		ft_memdel((void**)&parser->colors);
@@ -83,7 +83,7 @@ static void	set_colors1(unsigned int *colors)
 
 static int	default_color_table(t_bmp_parser *parser)
 {
-	if (!(parser->colors = (unsigned int*)malloc(sizeof(unsigned int)
+	if (!(parser->colors = (unsigned int*)ft_memalloc(sizeof(unsigned int)
 					* pow(2, parser->bpp))))
 		return (ft_printf("Could not malloc colors array\n"));
 	if (parser->bpp == 8)

@@ -1,13 +1,13 @@
 /* ************************************************************************** */
-/*																			*/
-/*														:::	  ::::::::   */
-/*   create_portals.c								   :+:	  :+:	:+:   */
-/*													+:+ +:+		 +:+	 */
-/*   By: lnicosia <marvin@42.fr>					+#+  +:+	   +#+		*/
-/*												+#+#+#+#+#+   +#+		   */
-/*   Created: 2019/08/21 15:00:42 by lnicosia		  #+#	#+#			 */
-/*   Updated: 2019/09/02 18:35:44 by sipatry		  ###   ########.fr	   */
-/*																			*/
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   create_portals.c                                   :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2020/01/08 15:04:50 by gaerhard          #+#    #+#             */
+/*   Updated: 2020/01/21 18:37:53 by lnicosia         ###   ########.fr       */
+/*                                                                            */
 /* ************************************************************************** */
 
 #include "env.h"
@@ -112,7 +112,7 @@ int		find_neighbors(t_env *env, t_portal_data data)
 }
 
 /*
-**	For a given sector, finds every neighbor sector
+**	For a given sector, finds every neighbor
 **	and creates portals between them if possible
 */
 

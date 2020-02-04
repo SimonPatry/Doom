@@ -3,14 +3,13 @@
 /*                                                        :::      ::::::::   */
 /*   render_sector.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lnicosia <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: sipatry <sipatry@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/09/10 14:40:47 by lnicosia          #+#    #+#             */
-/*   Updated: 2019/09/20 11:55:13 by lnicosia         ###   ########.fr       */
+/*   Updated: 2020/01/21 19:00:55 by lnicosia         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "env.h"
 #include "render.h"
 
 void		*wall_loop(void *param)
@@ -47,8 +46,8 @@ void		*wall_loop(void *param)
 			* v1.no_slope_floor_range + v1.no_slope_f1;
 		render.no_slope_current_ceiling = render.clipped_alpha
 			* v1.no_slope_ceiling_range + v1.no_slope_c1;
-		render.line_height = render.no_slope_current_floor
-			- render.no_slope_current_ceiling;
+		render.line_height = (render.no_slope_current_floor
+			- render.no_slope_current_ceiling);
 		render.ceiling_start = render.max_ceiling - render.ceiling_horizon;
 		render.floor_start = render.max_floor - render.floor_horizon;
 		if (render.current_ceiling > env->ymin[x]
@@ -68,10 +67,24 @@ void		*wall_loop(void *param)
 				- render.texel_y_near_z;
 			render.zrange = render.z - render.camera->near_z;
 		}
+		draw_wall_sprites(sector, render, env);
+		draw_wall_bullet_holes(sector, render, env);
 		if (render.current_ceiling > env->ymin[x])
-			draw_ceiling2(sector, render, env);
+		{
+			render.ceiling_height = render.max_ceiling
+			- render.camera->head_y[render.sector];
+			if (sector.ceiling_sprites.nb_sprites > 0)
+				draw_ceiling_sprites(sector, render, env);
+			draw_ceiling(sector, render, env);
+		}
 		if (render.current_floor < env->ymax[x])
-			draw_floor2(sector, render, env);
+		{
+			render.floor_height = render.camera->feet_y[render.sector]
+			- render.max_floor;
+			if (sector.floor_sprites.nb_sprites > 0)
+				draw_floor_sprites(sector, render, env);
+			draw_floor(sector, render, env);
+		}
 		if (sector.neighbors[render.i] != -1)
 		{
 			render.neighbor_max_ceiling = render.clipped_alpha
@@ -83,9 +96,19 @@ void		*wall_loop(void *param)
 			render.neighbor_current_floor = ft_clamp(
 					render.neighbor_max_floor, env->ymin[x], env->ymax[x]);
 			if (render.neighbor_current_ceiling > render.current_ceiling)
-				draw_upper_wall2(sector, render, env);
+			{
+				if (sector.textures[render.i] < 0)
+					draw_skybox(render, UPPER_WALL, env);
+				else
+					draw_upper_wall(sector, render, env);
+			}
 			if (render.neighbor_current_floor < render.current_floor)
-				draw_bottom_wall2(sector, render, env);
+			{
+				if (sector.textures[render.i] < 0)
+					draw_skybox(render, BOTTOM_WALL, env);
+				else
+					draw_bottom_wall(sector, render, env);
+			}
 			env->ymin[x] = ft_clamp(ft_max(render.neighbor_current_ceiling,
 						render.current_ceiling), env->ymin[x], env->ymax[x]);
 			env->ymax[x] = ft_clamp(ft_min(render.neighbor_current_floor,
@@ -93,8 +116,8 @@ void		*wall_loop(void *param)
 		}
 		else
 		{
-			if (sector.textures[render.i] == -1)
-				draw_skybox2(render, 1, env);
+			if (sector.textures[render.i] < 0)
+				draw_skybox(render, WALL, env);
 			else
 				draw_wall(sector, render, env);
 		}
@@ -103,7 +126,7 @@ void		*wall_loop(void *param)
 	return (NULL);
 }
 
-void		threaded_wall_loop(t_render_vertex v1, t_sector sector,
+int		threaded_wall_loop(t_render_vertex v1, t_sector sector,
 		t_render render, t_env *env)
 {
 	t_render_thread	rt[THREADS];
@@ -113,6 +136,7 @@ void		threaded_wall_loop(t_render_vertex v1, t_sector sector,
 	i = 0;
 	while (i < THREADS)
 	{
+		render.thread = i;
 		rt[i].v1 = v1;
 		rt[i].sector = sector;
 		rt[i].render = render;
@@ -121,24 +145,46 @@ void		threaded_wall_loop(t_render_vertex v1, t_sector sector,
 			/ (double)THREADS * i;
 		rt[i].xend = render.xstart + (render.xend - render.xstart)
 			/ (double)THREADS * (i + 1);
-		if (pthread_create(&threads[i], NULL, wall_loop, &rt[i]) != 0)
-			return ;
+		if (pthread_create(&threads[i], NULL, wall_loop, &rt[i]))
+			return (-1);
 		i++;
 	}
 	while (i-- > 0)
-		pthread_join(threads[i], NULL);
+		if (pthread_join(threads[i], NULL))
+			return (-1);
+	return (0);
+	/*t_render_thread	rt;
+	rt.v1 = v1;
+	rt.sector = sector;
+	rt.render = render;
+	rt.env = env;
+	rt.xstart = render.xstart;
+	rt.xend = render.xend;
+	wall_loop(&rt);*/
 }
 
-void		render_sector2(t_render render, t_env *env)
+int		render_sector(t_render render, t_env *env)
 {
 	int				i;
+	int				j;
 	t_sector		sector;
 	t_render_vertex	v1;
 	t_render		new;
+	int				tmp_max[2560];
+	int				tmp_min[2560];
 
-	i = -1;
+	if (render.camera->rendered_sectors[render.sector])
+		return (-1);
+	render.camera->rendered_sectors[render.sector]++;
 	sector = env->sectors[render.sector];
 	//ft_printf("rendering sector %d\n", sector.num);
+	j = -1;
+	while (++j < env->w)
+	{
+		tmp_max[j] = env->ymax[j];
+		tmp_min[j] = env->ymin[j];
+	}
+	i = -1;
 	while (++i < sector.nb_vertices)
 	{
 		if (!render.camera->v[sector.num][i].draw)
@@ -151,18 +197,40 @@ void		render_sector2(t_render render, t_env *env)
 		//ft_printf("cc\n");
 		render.xstart = ft_max(v1.clipped_x1, render.xmin);
 		render.xend = ft_min(v1.clipped_x2, render.xmax);
+		render.i = i;
 		render.ceiling_horizon = v1.ceiling_horizon;
 		render.floor_horizon = v1.floor_horizon;
 		render.texture = sector.textures[i];
-		render.i = i;
-		threaded_wall_loop(v1, sector, render, env);
+		if (render.texture == -1)
+		{
+			render.texture_w = env->skyboxes[0].textures[0].surface->w;
+			render.texture_h = env->skyboxes[0].textures[0].surface->h;
+			render.map_lvl = env->skyboxes[0].textures[0].nb_maps - 1;
+		}
+		else
+		{
+			render.texture_w = env->wall_textures[render.texture].surface->w;
+			render.texture_h = env->wall_textures[render.texture].surface->h;
+			render.map_lvl = env->wall_textures[render.texture].nb_maps - 1;
+		}
+		if (threaded_wall_loop(v1, sector, render, env))
+			return (-1);
 		if (sector.neighbors[i] != -1)
 		{
 			new = render;
 			new.xmin = render.xstart;
 			new.sector = sector.neighbors[i];
 			new.xmax = render.xend;
-			render_sector2(new, env);
+			render_sector(new, env);
+			j = -1;
+			while (++j < env->w)
+			{
+				env->ymax[j] = tmp_max[j];
+				env->ymin[j] = tmp_min[j];
+			}
 		}
 	}
+	//ft_printf("sector %d ok\n", sector.num);
+	render.camera->rendered_sectors[render.sector]--;
+	return (0);
 }

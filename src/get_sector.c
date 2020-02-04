@@ -1,13 +1,13 @@
 /* ************************************************************************** */
-/*																			*/
-/*														:::	  ::::::::   */
-/*   get_sector.c									   :+:	  :+:	:+:   */
-/*													+:+ +:+		 +:+	 */
-/*   By: gaerhard <gaerhard@student.42.fr>		  +#+  +:+	   +#+		*/
-/*												+#+#+#+#+#+   +#+		   */
-/*   Created: 2019/07/30 10:33:34 by lnicosia		  #+#	#+#			 */
-/*   Updated: 2019/09/24 13:55:14 by gaerhard		 ###   ########.fr	   */
-/*																			*/
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   get_sector.c                                       :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: sipatry <sipatry@student.42.fr>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2019/10/28 18:11:36 by sipatry           #+#    #+#             */
+/*   Updated: 2020/01/21 15:36:19 by lnicosia         ###   ########.fr       */
+/*                                                                            */
 /* ************************************************************************** */
 
 #include "env.h"
@@ -18,7 +18,7 @@
 ** Starts by looking into the given sector.
 */
 
-int		get_sector(t_env *env, t_v3 pos, short origin)
+int		get_sector(t_env *env, t_v3 pos, int origin)
 {
 	int		i;
 

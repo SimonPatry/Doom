@@ -1,13 +1,13 @@
 /* ************************************************************************** */
-/*																			*/
-/*														:::	  ::::::::   */
-/*   add_object.c									   :+:	  :+:	:+:   */
-/*													+:+ +:+		 +:+	 */
-/*   By: sipatry <marvin@42.fr>					 +#+  +:+	   +#+		*/
-/*												+#+#+#+#+#+   +#+		   */
-/*   Created: 2019/07/30 10:24:50 by sipatry		   #+#	#+#			 */
-/*   Updated: 2019/09/09 16:58:03 by sipatry		  ###   ########.fr	   */
-/*																			*/
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   add_object.c                                       :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: sipatry <sipatry@student.42.fr>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2019/11/08 17:42:42 by gaerhard          #+#    #+#             */
+/*   Updated: 2020/01/21 15:20:11 by sipatry          ###   ########.fr       */
+/*                                                                            */
 /* ************************************************************************** */
 
 #include "env.h"
@@ -20,23 +20,30 @@ int	add_object(t_env *env)
 	object.pos.x = (env->sdl.mx - env->editor.center.x) / env->editor.scale;
 	object.pos.y = (env->sdl.my - env->editor.center.y) / env->editor.scale;
 	object.sprite = 0;
-	object.scale = 50;
+	object.scale = 2;
 	object.angle = 0;
 	object.exists = 1;
 	object.sector = get_sector_no_z(env, new_v3(object.pos.x, object.pos.y, 0));
-	object.pos.z = env->sectors[object.sector].floor;
 	if (object.sector != -1)
 	{
 		object.light_color = env->sectors[object.sector].light_color;
 		object.brightness = env->sectors[object.sector].brightness;
+		object.intensity = env->sectors[object.sector].intensity;
+		object.pos.z = get_floor_at_pos(env->sectors[object.sector],
+		object.pos, env);
 	}
 	else
 	{
 		object.light_color = 0xFFFFFFFF;
-		object.brightness = 128;
+		object.brightness = 0;
+		object.intensity = 0;
+		object.pos.z = 0;
 	}
 	if (!(env->objects = (t_object*)ft_realloc(env->objects, sizeof(t_object) * env->nb_objects, sizeof(t_object) * (env->nb_objects + 1))))
 		return (ft_printf("Could not realloc objects\n"));
 	env->objects[env->nb_objects] = object;
+	env->editor.create_object = 0;
+	env->editor.add_object.state = UP;
+	env->nb_objects++;
 	return (0);
 }

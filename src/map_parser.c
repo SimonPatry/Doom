@@ -6,7 +6,7 @@
 /*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/04/09 09:53:18 by sipatry           #+#    #+#             */
-/*   Updated: 2019/10/23 16:19:53 by gaerhard         ###   ########.fr       */
+/*   Updated: 2020/01/31 14:49:01 by gaerhard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,7 @@ static int	init_vertices(t_env *env, t_map_parser *parser)
 							*line, parser));
 			if (env->nb_vertices < 3)
 				return (custom_error("You can not declare less than 3 walls."));
-			if (!(env->vertices = (t_vertex *)malloc(sizeof(t_vertex)
+			if (!(env->vertices = (t_vertex *)ft_memalloc(sizeof(t_vertex)
 							* (env->nb_vertices))))
 				return (ft_perror("Could not malloc vertices:"));
 			ft_strdel(&tmp);
@@ -100,7 +100,7 @@ static int	init_sectors(t_env *env, t_map_parser *parser)
 							"a digit", *line, parser));
 			if (env->nb_sectors < 1)
 				return (custom_error("You need at least one sector"));
-			if (!(env->sectors = (t_sector *)malloc(sizeof(t_sector)
+			if (!(env->sectors = (t_sector *)ft_memalloc(sizeof(t_sector)
 							* env->nb_sectors)))
 				return (custom_error("Could not malloc sectors!"));
 			i = 0;
@@ -120,23 +120,27 @@ static int	init_sectors(t_env *env, t_map_parser *parser)
 	return (0);
 }
 
+void	set_sector_xmax(t_env *env, t_sector *sector)
+{
+	int i;
+
+	i = 0;
+	while (i < sector->nb_vertices)
+	{
+		if (sector->x_max < env->vertices[sector->vertices[i]].x)
+			sector->x_max = env->vertices[sector->vertices[i]].x;
+		i++;
+	}
+}
+
 void	set_sectors_xmax(t_env *env)
 {
 	int i;
-	int	j;
 
 	i = 0;
 	while (i < env->nb_sectors)
 	{
-		j = 0;
-		while (j < env->sectors[i].nb_vertices)
-		{
-			if (env->sectors[i].x_max
-					< env->vertices[env->sectors[i].vertices[j]].x)
-				env->sectors[i].x_max =
-					env->vertices[env->sectors[i].vertices[j]].x;
-			j++;
-		}
+		set_sector_xmax(env, &env->sectors[i]);
 		i++;
 	}
 }
@@ -148,7 +152,7 @@ void	init_player(t_env *env)
 	env->player.sector = -1;
 	env->player.camera.angle_z_cos = cos(0);
 	env->player.camera.angle_z_sin = sin(0);
-	env->player.speed = 0.5;
+	env->player.speed = 0.1;
 	env->player.pos.z = 0;
 	env->player.health = 100;
 	env->player.killed = 0;
@@ -165,8 +169,11 @@ void	init_player(t_env *env)
 	env->player.state.fall = 0;
 	env->player.state.climb = 0;
 	env->player.state.jump = 0;
+	env->player.state.fly = 0;
 	env->player.state.crouch = 0;
 	env->player.state.walk = 0;
+	env->gravity.collision = 0;
+	env->player.in_combat = 0;
 }
 
 int		parse_map(char *file, t_env *env)
@@ -196,8 +203,8 @@ int		parse_map(char *file, t_env *env)
 		return (-1);
 	//return (custom_error("Could not init sectors"));
 	if (parse_sectors(env, &parser))
-		return (-1);
-	//return (custom_error("Error while parsing sectors"));
+		return (custom_error("Error while parsing sectors"));
+				//return (-1);
 	precompute_slopes(env);
 	if (init_objects(env, &parser))
 		return (-1);
@@ -211,14 +218,17 @@ int		parse_map(char *file, t_env *env)
 	if (parse_enemies(env, &parser))
 		return (-1);
 	//return (custom_error("Error while parsing creatures"));
+	if (parse_events(env, &parser))
+		return (custom_error("Error while parsing events"));
 	if (parse_player(env, &parser))
-		return (-1);
+		return (custom_error("Error while parsing player data"));
 	//return (custom_error("Error while parsing player"));
 	if (env->player.sector == -1)
 		return (missing_data("You need to give player data", &parser));
 	update_player_z(env);
 	set_sectors_xmax(env);
 	init_enemies_data(env);
+	init_objects_data(env);
 	if (close(parser.fd))
 		return (custom_error("Could not close the file"));
 	ft_printf("{reset}");

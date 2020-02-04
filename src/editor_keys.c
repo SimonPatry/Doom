@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   editor_keys.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sipatry <sipatry@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/29 15:07:41 by lnicosia          #+#    #+#             */
-/*   Updated: 2019/10/23 16:14:48 by gaerhard         ###   ########.fr       */
+/*   Updated: 2020/01/31 15:32:41 by lnicosia         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,53 +14,11 @@
 
 int			editor_keys(t_env *env)
 {
-	int		clicked_vertex;
 	double time;
+	int	i;
 
+	i = 0;
 	time = SDL_GetTicks();
-	if (env->inputs.space
-			&& env->editor.dragged_player == -1
-			&& env->editor.dragged_object == -1
-			&& env->editor.dragged_vertex == -1)
-	{
-		clicked_vertex = get_existing_vertex(env);
-		if (clicked_vertex == -1 && is_new_vertex_valid(env, clicked_vertex))
-		{
-			if (add_vertex(env))
-				return (ft_printf("Could not add new vertex\n"));
-			add_vertex_to_current_sector(env, env->nb_vertices - 1);
-			if (env->editor.start_vertex == -1) //Nouveau secteur
-			{
-				env->editor.start_vertex = env->nb_vertices - 1;
-			}
-		}
-		else if (clicked_vertex >= 0)
-		{
-			if (env->editor.start_vertex == -1)
-			{
-				env->editor.start_vertex = clicked_vertex;
-				add_vertex_to_current_sector(env, clicked_vertex);
-			}
-			else
-			{
-				if (clicked_vertex == ((t_vertex*)env->editor.current_vertices->content)->num
-						&& ft_lstlen(env->editor.current_vertices) > 2
-						&& is_new_vertex_valid(env, clicked_vertex))
-				{
-					env->editor.reverted = get_clockwise_order(env) ? 0 : 1;
-					env->editor.start_vertex = -1;
-					if (add_sector(env))
-						return (ft_printf("Error while creating new sector\n"));
-					free_current_vertices(env);
-					get_new_floor_and_ceiling(env);
-					update_sector_slope(env, &env->sectors[env->nb_sectors - 1]);
-				}
-				else if (is_new_vertex_valid(env, clicked_vertex))
-					add_vertex_to_current_sector(env, clicked_vertex);
-			}
-		}
-		env->inputs.space = 0;
-	}
 	if (env->inputs.backspace && !env->confirmation_box.state)
 	{
 		del_last_vertex(env);
@@ -74,56 +32,20 @@ int			editor_keys(t_env *env)
 	objects_selection(env);
 	vertices_selection(env);
 	if (env->confirmation_box.state)
-		confirmation_box_keys(&env->confirmation_box, env);
-	if (env->sdl.mx > 200 && env->inputs.left_click
-			&& !env->confirmation_box.state
-			&& env->editor.start_vertex == -1
-			&& env->editor.dragged_player == -1
-			&& env->editor.dragged_object == -1
-			&& env->editor.dragged_vertex == -1
-			&& env->editor.dragged_enemy == -1)
 	{
-		env->editor.selected_sector = get_sector_no_z(env,
-				new_v3((env->sdl.mx - env->editor.center.x) / env->editor.scale,
-					(env->sdl.my - env->editor.center.y) / env->editor.scale,
-					0));
-		env->editor.selected_vertex = -1;
-		env->editor.selected_object = -1;
-		env->editor.selected_player = -1;
-		env->selected_enemy = -1;
+		if (confirmation_box_keys(&env->confirmation_box, env))
+			return (-1);
 	}
 	if (env->inputs.right_click)
 	{
 		env->editor.center.x += env->sdl.mouse_x;
 		env->editor.center.y += env->sdl.mouse_y;
 	}
-	if (env->inputs.enter && !env->confirmation_box.state)
-	{
-		if (!valid_map(env))
-		{
-			env->editor.selected_vertex = -1;
-			env->editor.selected_sector = -1;
-			env->editor.selected_player = -1;
-			env->editor.selected_object = -1;
-			env->selected_enemy = -1;
-			env->editor.in_game = 1;
-			env->inputs.enter = 0;
-			env->screen_sectors_size = ft_min(env->nb_sectors, env->w);
-			free_camera(&env->player.camera);
-			if (init_camera_arrays(&env->player.camera, env))
-				return (ft_printf("Could not init camera arrays\n"));
-			if (env->sector_list)
-				ft_memdel((void**)&env->sector_list);
-			if (!(env->sector_list = (int*)malloc(sizeof(int) * env->nb_sectors)))
-				return (ft_printf("Could not allocate sector list\n", env));
-			update_camera_position(&env->player.camera);
-			update_player_z(env);
-			ft_bzero(&env->inputs, sizeof(env->inputs));
-			SDL_SetRelativeMouseMode(1);
-			SDL_GetRelativeMouseState(&env->sdl.mouse_x, &env->sdl.mouse_y);
-		}
-		env->inputs.enter = 0;
-	}
+
+	/*
+	**	Moving the map with arrows
+	*/
+	
 	if (env->inputs.left && !env->editor.tab && !env->inputs.ctrl)
 		env->editor.center.x -= 3;
 	if (env->inputs.right && !env->editor.tab && !env->inputs.ctrl)
@@ -132,29 +54,110 @@ int			editor_keys(t_env *env)
 		env->editor.center.y -= 3;
 	if (env->inputs.backward && !env->editor.tab && !env->inputs.ctrl)
 		env->editor.center.y += 3;
-	if (env->inputs.s && env->inputs.ctrl && !valid_map(env) && !env->editor.in_game)
+	if (env->inputs.s && env->inputs.ctrl && !valid_map(env))
 	{
-		if (save_map("maps/test.map", env))
-			return (ft_printf("Could not save the map\n"));
+		new_input_box(&env->input_box, new_point(env->h_w, env->h_h),
+		STRING, &env->save_file);
 		env->inputs.s = 0;
 		env->inputs.ctrl = 0;
 	}
-	if (env->editor.tab && env->editor.selected_sector != -1 && !env->editor.in_game)
+
+	/*
+	**	control of the selection the stats in 2D mode editor iwh include:
+	**	floor | ceiling | brightness control on arrows or keybord usual binding (w-a-s-d)
+	**	control of the sector status with +/-
+	*/
+
+	if (button_keys(&env->editor.add_enemy, env))
+		return (-1);
+	if (button_keys(&env->editor.add_object, env))
+		return (-1);
+	if (button_keys(&env->editor.save, env))
+		return (-1);
+	if (button_keys(&env->editor.general_tab, env))
+		return (-1);
+	if (button_keys(&env->editor.sprite_tab, env))
+		return (-1);
+	if (button_keys(&env->editor.sector_tab, env))
+		return (-1);
+	if (button_keys(&env->editor.change_mode, env))
+		return (-1);
+	if (button_keys(&env->editor.launch_game, env))
+		return (-1);
+	if (button_keys(&env->editor.texture_background, env))
+		return (-1);
+	if (button_keys(&env->editor.enemy_background, env))
+		return (-1);
+	if (env->editor.selected_sector != -1 && sector_buttons(env))
+		return (-1);
+	if (env->editor.selected_player != -1 && player_buttons(env))
+		return (-1);
+	if (env->selected_enemy != -1 && enemy_buttons(env))
+		return (-1);
+	if (env->selected_object != -1 && object_buttons(env))
+		return (-1);
+	if (is_events_tab_visible(env))
 	{
+		if (button_keys(&env->editor.events_tab, env))
+			return (-1);
+		if (env->editor.events_tab.state == DOWN)
+		{
+			if (button_keys(&env->editor.next_events, env))
+				return (-1);
+			if (button_keys(&env->editor.previous_events, env))
+				return (-1);
+		}
+		if (are_event_selection_buttons_visible(env))
+		{
+			if (button_keys(&env->editor.next_event, env))
+				return (-1);
+			if (button_keys(&env->editor.previous_event, env))
+				return (-1);
+		}
+		if (are_launch_condition_selection_buttons_visible(env))
+		{
+			if (button_keys(&env->editor.next_launch_condition, env))
+				return (-1);
+			if (button_keys(&env->editor.previous_launch_condition, env))
+				return (-1);
+		}
+		if (are_exec_condition_selection_buttons_visible(env))
+		{
+			if (button_keys(&env->editor.next_exec_condition, env))
+				return (-1);
+			if (button_keys(&env->editor.previous_exec_condition, env))
+				return (-1);
+		}
+	}
+	if (env->editor.draw_selection_tab)
+	{
+		while (i < MAX_WALL_TEXTURE)
+		{
+			if (button_keys(&env->editor.textures[i], env))
+				return (-1);
+			i++;
+		}
+		i = 0;
+		while (i < MAX_SKYBOX)
+		{
+			button_keys(&env->editor.skyboxes[i], env);
+			i++;
+		}
+	}
+	if (env->editor.draw_enemy_tab)
+	{
+		while (i < MAX_ENEMIES)
+		{
+			if (button_keys(&env->editor.enemy_tab[i], env))
+				return (-1);
+			i++;
+		}
+	}
+	if ((env->inputs.plus || env->inputs.minus) && !env->editor.in_game && env->editor.selected_sector != -1)
+	{
+		if (!env->time.tick4)
+			env->time.tick4 = SDL_GetTicks();
 		time = SDL_GetTicks();
-		if (!env->time.tick2)
-			env->time.tick2 = SDL_GetTicks();
-		if (env->inputs.backward && env->selected_stat < 2 && time - env->time.tick2 > 300)
-		{
-			env->time.tick2 = time;
-			env->selected_stat++;
-		}
-		else if (env->inputs.forward && env->selected_stat > 0 && time - env->time.tick2 > 300)
-		{
-			env->time.tick2 = time;
-			env->selected_stat--;
-		}
-		selected_information_in_sector(env);
 	}
 	return (0);
 }

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   is_new_vertex_valid.c                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sipatry <marvin@42.fr>                     +#+  +:+       +#+        */
+/*   By: sipatry <sipatry@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/09/02 13:54:07 by sipatry           #+#    #+#             */
-/*   Updated: 2019/09/02 14:08:54 by sipatry          ###   ########.fr       */
+/*   Updated: 2020/01/20 14:31:24 by lnicosia         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,8 +81,9 @@ int		check_list_intersections(t_env *env, t_vertex *last, int index)
 					new_v2(v1->x, v1->y),
 					new_v2(v2->x, v2->y),
 					new_v2(last->x, last->y),
-					new_v2(round((env->sdl.mx - env->editor.center.x) / env->editor.scale),
-						round((env->sdl.my - env->editor.center.y) / env->editor.scale))))
+					new_v2(round((env->sdl.mx - env->editor.center.x) /
+					env->editor.scale), round((env->sdl.my
+					- env->editor.center.y) / env->editor.scale))))
 			return (custom_error("Intersects with current sector"));
 		tmp = tmp->next;
 	}
@@ -182,6 +183,78 @@ t_vertex	find_second_vertex(t_env *env, t_sector sector, int new_index, int inde
 	return (res);
 }
 
+int		check_all_angles(t_v2 *p, int res, int i, int straight)
+{	
+	if(((p[i + 1].x - p[i].x) * (p[i + 2].y - p[i + 1].y)
+			- ((p[i + 1].y - p[i].y) * (p[i + 2].x - p[i + 1].x))) > 0)
+			{
+				if (!res)
+					res += straight;
+				res++;
+			}
+	else if (((p[i + 1].x - p[i].x) * (p[i + 2].y - p[i + 1].y)
+	- ((p[i + 1].y - p[i].y) * (p[i + 2].x - p[i + 1].x))) < 0)
+	{
+		if (!res)
+			res -= straight;
+		res--;
+	}
+	else if (((p[i + 1].x - p[i].x) * (p[i + 2].y - p[i + 1].y)
+	- ((p[i + 1].y - p[i].y) * (p[i + 2].x - p[i + 1].x))) == 0 && res)
+		res += res > 0 ? 1 : -1;
+	return (res);
+}
+
+/*
+**	PROTECTION
+*/
+
+int		is_new_sector_convex(t_env *env, t_list *tmp)
+{
+	int		len;
+	int		i;
+	t_v2	*p;
+	int		res;
+	int		straight;
+	
+	i = 0;
+	res = 0;
+	straight = 0;
+	len = ft_lstlen(env->editor.current_vertices);
+	tmp = env->editor.current_vertices;
+	if (len > 2)
+	{
+		len += 3;
+		if (!(p = (t_v2*)ft_memalloc(sizeof(t_v2) * (len))))
+			return (0);
+		p[len - 3].x = round((env->sdl.mx - env->editor.center.x) / env->editor.scale);
+		p[len - 3].y = round((env->sdl.my - env->editor.center.y) / env->editor.scale);
+		while (tmp)
+		{
+			p[i].x = ((t_vertex*)tmp->content)->x;
+			p[i].y = ((t_vertex*)tmp->content)->y;
+			tmp = tmp->next;
+			i++;
+		}
+		p[len - 2] = p[0];
+		p[len - 1] = p[1];
+		i = 0;
+		while (i < len - 2)
+		{
+			res = check_all_angles(p, res, i, straight);
+			if (!res)
+				straight++;
+			else
+				straight = 0;
+			i++;
+		}
+
+		if (res != -(len - 2) && res != len - 2 && res)
+			return (0);
+	}
+	return (1);
+}
+
 int		is_new_dragged_vertex_valid(t_env *env, int index)
 {
 	int			*list_sectors;
@@ -210,19 +283,27 @@ int		is_new_dragged_vertex_valid(t_env *env, int index)
 }
 
 /*
- **	Returns 1 if a vertex is valid
- **	(no intersection with current or existing sector,
- **	not already existing in current sector)
- */
+**	Returns 1 if a vertex is valid
+**	(no intersection with current or existing sector,
+**	not already existing in current sector)
+*/
 
 int		is_new_vertex_valid(t_env *env, int index)
 {
+	t_v2 vertex;
+
+	vertex.x = round((env->sdl.mx - env->editor.center.x) / env->editor.scale);
+	vertex.y = round((env->sdl.my - env->editor.center.y) / env->editor.scale);
+	if (check_vertex_inside_sector(env, vertex) != 1)
+		return (0);
 	if (!env->editor.current_vertices)
 		return (1);
 	if (index != env->editor.start_vertex
 			&& current_vertices_contains(env, index))
 		return (0);
 	if (new_wall_intersects(env, index))
+		return (0);
+	if (!is_new_sector_convex(env, env->editor.current_vertices))
 		return (0);
 	return (1);
 }

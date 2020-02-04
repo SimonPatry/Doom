@@ -6,7 +6,7 @@
 /*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/09/04 14:18:10 by lnicosia          #+#    #+#             */
-/*   Updated: 2019/09/16 16:40:36 by lnicosia         ###   ########.fr       */
+/*   Updated: 2020/01/31 18:36:39 by lnicosia         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,8 +23,8 @@ static int	parse_enemy_data(t_env *env, char **line, t_map_parser *parser)
 	if (valid_number(*line, parser))
 		return (invalid_char("before enemy health", "a digit",
 					**line, parser));
-	env->enemies[parser->enemies_count].health = ft_atoi(*line);
-	if (env->enemies[parser->enemies_count].health <= 0)
+	env->enemies[parser->enemies_count].map_hp = ft_atoi(*line);
+	if (env->enemies[parser->enemies_count].map_hp <= 0)
 		return (custom_error_with_line("Enemy must have 1 or more health points", parser));
 	*line = skip_number(*line);
 	if (!**line || **line == ']')
@@ -70,6 +70,8 @@ static int	parse_enemy_data(t_env *env, char **line, t_map_parser *parser)
 
 static int	parse_enemy_sprite(t_env *env, char **line, t_map_parser *parser)
 {
+	int	parse;
+
 	if (**line != '[')
 		return (invalid_char("before enemy sprite", "'['", **line, parser));
 	(*line)++;
@@ -78,10 +80,12 @@ static int	parse_enemy_sprite(t_env *env, char **line, t_map_parser *parser)
 	if (valid_number(*line, parser))
 		return (invalid_char("before enemy sprite", "a digit",
 					**line, parser));
-	env->enemies[parser->enemies_count].sprite = ft_atoi(*line);
-	if (env->enemies[parser->enemies_count].sprite < 0
-			|| env->enemies[parser->enemies_count].sprite >= MAX_SPRITES)
+	parse = ft_atoi(*line);
+	if (parse < 0
+			|| parse >= MAX_ENEMIES)
 		return (custom_error_with_line("Invalid sprite texture", parser));
+	env->enemies[parser->enemies_count].sprite =
+	env->enemies_main_sprites[parse];
 	*line = skip_number(*line);
 	if (!**line || **line == ']')
 		return (missing_data("enemy scale", parser));
@@ -176,10 +180,21 @@ static int	parse_enemy_pos(t_env *env, char **line, t_map_parser *parser)
 			new_v3(env->enemies[parser->enemies_count].pos.x,
 				env->enemies[parser->enemies_count].pos.y,
 				env->enemies[parser->enemies_count].pos.z));
-	env->enemies[parser->enemies_count].brightness =
-		env->sectors[env->enemies[parser->enemies_count].sector].brightness;
-	env->enemies[parser->enemies_count].light_color =
-		env->sectors[env->enemies[parser->enemies_count].sector].light_color;
+	if (env->enemies[parser->enemies_count].sector >= 0)
+	{
+		env->enemies[parser->enemies_count].brightness =
+			env->sectors[env->enemies[parser->enemies_count].sector].brightness;
+		env->enemies[parser->enemies_count].light_color =
+			env->sectors[env->enemies[parser->enemies_count].sector].light_color;
+		env->enemies[parser->enemies_count].intensity =
+			env->sectors[env->enemies[parser->enemies_count].sector].intensity;
+	}
+	else
+	{
+		env->enemies[parser->enemies_count].brightness = 0;
+		env->enemies[parser->enemies_count].light_color = 0;
+		env->enemies[parser->enemies_count].intensity = 0;
+	}
 	return (0);
 }
 

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   bmp_parser.h                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lnicosia <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: sipatry <sipatry@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/04/30 13:48:16 by lnicosia          #+#    #+#             */
-/*   Updated: 2019/07/24 15:10:35 by sipatry          ###   ########.fr       */
+/*   Updated: 2020/01/31 12:08:27 by sipatry          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,6 +53,18 @@ int					get_image_header_data(unsigned char *str,
 int					parse_image_header(int fd, t_bmp_parser *parser);
 int					set_color_table(int fd, t_bmp_parser *parser);
 int					get_image_header_size(int fd, t_bmp_parser *parser);
-int					parse_pixel_data(int fd, t_bmp_parser *parser, int index, t_env *env);
-
+int					parse_pixel_data(int fd, t_bmp_parser *parser,
+int index, t_env *env);
+int					parse_pixel_data_wall(int fd, t_bmp_parser *parser,
+int index, t_env *env);
+int					parse_pixel_data_skybox(int fd, t_bmp_parser *parser,
+int index, int num_sky, t_env *env);
+int					parse_pixel_data_ui(int fd, t_bmp_parser *parser,
+int index, t_env *env);
+int					parse_pixel_data_ui_mini(int fd, t_bmp_parser *parser,
+int index, t_env *env);
+int					parse_pixel_data_ui_mini_objects(int fd, t_bmp_parser *parser,
+int index, t_env *env);
+int					parse_pixel_data_ui_mini_skyboxes(int fd, t_bmp_parser *parser,
+int index, t_env *env);
 #endif

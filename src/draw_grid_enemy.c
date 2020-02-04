@@ -1,13 +1,13 @@
 /* ************************************************************************** */
-/*																			*/
-/*														:::	  ::::::::   */
-/*   draw_grid_enemy.c								  :+:	  :+:	:+:   */
-/*													+:+ +:+		 +:+	 */
-/*   By: sipatry <marvin@42.fr>					 +#+  +:+	   +#+		*/
-/*												+#+#+#+#+#+   +#+		   */
-/*   Created: 2019/09/05 16:56:49 by sipatry		   #+#	#+#			 */
-/*   Updated: 2019/09/06 14:37:39 by sipatry		  ###   ########.fr	   */
-/*																			*/
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   draw_grid_enemy.c                                  :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: lnicosia <marvin@42.fr>                    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2020/01/27 14:55:09 by lnicosia          #+#    #+#             */
+/*   Updated: 2020/02/04 10:17:44 by lnicosia         ###   ########.fr       */
+/*                                                                            */
 /* ************************************************************************** */
 
 #include "env.h"
@@ -19,7 +19,6 @@ void	draw_grid_enemies(t_env *env)
 	double		scale;
 	int			i;
 	Uint32		color;
-	//t_v3		v[3];
 
 	i = 0;
 	if (env->editor.dragged_enemy != -1)
@@ -43,18 +42,17 @@ void	draw_grid_enemies(t_env *env)
 			color = 0xFF0000FF;
 			if (env->inputs.left_click
 					&& !env->confirmation_box.state
+					&& !env->input_box.state
 					&& env->editor.start_vertex == -1
 					&& env->editor.dragged_player == -1
 					&& env->editor.dragged_enemy == -1
 					&& env->editor.dragged_vertex == -1
-					&& env->editor.dragged_object == -1)
+					&& env->editor.dragged_object == -1
+					&& env->sdl.mx > 400)
 			{
+				reset_selection(env);
 				env->editor.dragged_enemy = i;
 				env->selected_enemy = i;
-				env->editor.selected_vertex = -1;
-				env->editor.selected_sector = -1;
-				env->editor.selected_player = -1;
-				env->editor.selected_object = -1;
 			}
 		}
 		else
@@ -67,15 +65,5 @@ void	draw_grid_enemies(t_env *env)
 		if (env->editor.dragged_enemy != i)
 			draw_circle(new_circle(color, color, center, scale), env);
 		i++;
-		/*v[0] = new_v3(center.x + cos(env->enemies[i].angle - M_PI / 2) * scale / 2,
-				center.y + sin(env->enemies[i].angle - M_PI / 2) * scale / 2,
-				0);
-		v[2] = new_v3(center.x - cos(env->enemies[i].angle - M_PI / 2) * scale / 2,
-				center.y - sin(env->enemies[i].angle - M_PI / 2) * scale / 2,
-				0);
-		v[1] = new_v3(center.x + cos(env->enemies[i].angle) * scale * 2,
-				center.y + sin(env->enemies[i].angle) * scale * 2,
-				0);
-		fill_triangle(v, 0xFFFFFF00, env);*/
 	}
 }

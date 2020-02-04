@@ -1,13 +1,13 @@
 /* ************************************************************************** */
-/*																			*/
-/*														:::	  ::::::::   */
-/*   draw_grid_walls.c								  :+:	  :+:	:+:   */
-/*													+:+ +:+		 +:+	 */
-/*   By: sipatry <marvin@42.fr>					 +#+  +:+	   +#+		*/
-/*												+#+#+#+#+#+   +#+		   */
-/*   Created: 2019/07/25 13:22:35 by sipatry		   #+#	#+#			 */
-/*   Updated: 2019/09/02 14:09:45 by sipatry		  ###   ########.fr	   */
-/*																			*/
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   draw_grid_walls.c                                  :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: sipatry <sipatry@student.42.fr>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2019/11/14 12:25:43 by sipatry           #+#    #+#             */
+/*   Updated: 2019/11/26 12:01:57 by sipatry          ###   ########.fr       */
+/*                                                                            */
 /* ************************************************************************** */
 
 #include "env.h"
@@ -54,6 +54,10 @@ void	draw_grid_sector(t_sector sector, Uint32 color, t_env *env)
 	i = 0;
 	while (i < sector.nb_vertices)
 	{
+	/*	ft_printf("v1.x: %f v1.y: %f | ", env->vertices[sector.vertices[i]].x,
+		env->vertices[sector.vertices[i]].y);
+		ft_printf("v2.x: %f v2.y: %f\n", env->vertices[sector.vertices[i + 1]].x,
+		env->vertices[sector.vertices[i + 1]].y);*/
 		v1.x = env->editor.center.x +
 			env->vertices[sector.vertices[i]].x * env->editor.scale;
 		v1.y = env->editor.center.y +
@@ -76,6 +80,8 @@ void	draw_grid_sectors(t_env *env)
 	int	i;
 
 	i = 0;
+	if (!env->editor.player_exist && env->nb_sectors == 1)
+		add_player(env);
 	while (i < env->nb_sectors)
 	{
 		if (i == env->editor.selected_sector)

@@ -3,15 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   init_game.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sipatry <sipatry@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/06/20 11:56:46 by sipatry           #+#    #+#             */
-/*   Updated: 2019/10/23 16:16:17 by gaerhard         ###   ########.fr       */
+/*   Updated: 2020/02/03 14:59:46 by sipatry          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "env.h"
 #include "collision.h"
+#include "wall_sprite_modifier.h"
+#include "events_conditions.h"
 
 void	save_init_data(t_env *env)
 {
@@ -34,9 +36,24 @@ void	save_init_data(t_env *env)
 	i = 0;
 	while (i < env->nb_objects)
 	{
+		env->objects[i].object_init_data.main_sprite = env->objects[i].main_sprite;
 		env->objects[i].object_init_data.pos = env->objects[i].pos;
 		env->objects[i].object_init_data.sector = env->objects[i].sector;
 		env->objects[i].object_init_data.angle = env->objects[i].angle;
+		i++;
+	}
+}
+
+void	set_enemies_hp(t_env *env)
+{
+	int i;
+
+	i = 0;
+	while (i < env->nb_enemies)
+	{
+		if (env->enemies[i].exists)
+			env->enemies[i].health = env->enemies[i].map_hp *
+				env->difficulty;
 		i++;
 	}
 }
@@ -50,11 +67,13 @@ int		init_game(int ac, char **av)
 	if (ac != 2)
 		return (ft_printf("No map file.\n"));
 	ft_bzero(&env, sizeof(t_env));
-	env.menu_select = 1;
+	env.difficulty = 1;
 	env.running = 1;
-	env.editor.new_player = 1;
+	env.editor.player_exist = 1;
 	env.playing = 1;
+	env.first_frame = 0; //flag value = 1 once the first frame is shown
 	init_player(&env);
+	init_editor_data(&env);
 	if (init_screen_size(&env))
 		return (crash("Could not initialize screen sizes\n", &env));
 	init_options(&env);
@@ -68,16 +87,18 @@ int		init_game(int ac, char **av)
 		return (crash("Could not load fonts\n", &env));
 	if (init_textures(&env))
 		return (crash("Could not load textures\n", &env));
+	if (init_object_sprites(&env))
+		return (crash("Could not load object sprites\n", &env));
+	if (init_enemy_sprites(&env))
+		return (crash("Could not load enemy sprites\n", &env));
+	if (generate_mipmaps(&env))
+		return (crash("Could not generate mipmaps\n", &env));
 	ft_printf("Parsing map \"%s\"..\n", av[1]);
 	if (parse_map(av[1], &env))
-		return (crash("Error while parsing the map\n", &env));
-	if (init_camera(&env.player.camera, &env))
-		return (crash("Could not init camera\n", &env));
+		return (crash("{red}Error while parsing the map{reset}\n", &env));
 	if (valid_map(&env))
 		return (crash("Invalid map!\n", &env));
-	if (init_sprites(&env))
-		return (crash("Could not load sprites\n", &env));
-	if (!(env.sector_list = (int *)malloc(sizeof(int) * env.nb_sectors)))
+	if (!(env.sector_list = (int *)ft_memalloc(sizeof(int) * env.nb_sectors)))
 		return (crash("Could not allocate sector list\n", &env));
 	while (i < env.nb_objects)
 	{
@@ -90,18 +111,21 @@ int		init_game(int ac, char **av)
 		env.enemies[i].exists = 1;
 		i++;
 	}
+	set_enemies_hp(&env);
 	view(&env);
 	update_camera_position(&env.player.camera);
 	SDL_SetRelativeMouseMode(1);
 	init_animations(&env);
 	init_weapons(&env);
-	env.flag = 0;
-	env.player.stuck = 0;
 	ft_printf("Starting music..\n");
-	Mix_PlayMusic(env.sound.background, -1);
+	play_music(&env, &env.sound.music_chan, env.sound.mt_erebus, env.sound.music_vol);
 	ft_printf("Launching game loop..\n");
+	if (init_camera(&env.player.camera, &env))
+		return (crash("Could not init fixed camera\n", &env));
 	if (init_camera(&env.fixed_camera, &env))
 		return (crash("Could not init fixed camera\n", &env));
+	if (init_skybox(&env))
+		return (crash("Could not init skybox\n", &env));
 	env.fixed_camera.pos = new_v3(3, 3, 7);
 	env.fixed_camera.angle = 45 * CONVERT_RADIANS;
 	env.fixed_camera.angle_cos = cos(env.fixed_camera.angle);
@@ -111,8 +135,7 @@ int		init_game(int ac, char **av)
 	env.fixed_camera.angle_z_sin = sin(env.fixed_camera.angle_z);
 	update_camera_position(&env.fixed_camera);
 	save_init_data(&env);
-	env.confirmation_box.font = env.sdl.fonts.alice30;
-	env.confirmation_box.state = 0;
+	env.confirmation_box.font = env.sdl.fonts.lato20;
 	env.player.highest_sect = find_highest_sector(&env, new_movement(env.player.sector, env.player.size_2d, env.player.eyesight, env.player.pos));
 	return (doom(&env));
 }

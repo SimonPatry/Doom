@@ -6,7 +6,7 @@
 /*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/04/09 11:57:06 by lnicosia          #+#    #+#             */
-/*   Updated: 2019/09/18 17:04:20 by lnicosia         ###   ########.fr       */
+/*   Updated: 2020/01/06 18:02:09 by lnicosia         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,10 +37,10 @@ void		reset_clipped(t_env *env)
 	}
 }
 
-short	get_vertex_nb_in_sector(short vertex, t_sector sector)
+int	get_vertex_nb_in_sector(int vertex, t_sector sector)
 {
-	short	i;
-	short	res;
+	int	i;
+	int	res;
 
 	i = 0;
 	res = 0;
@@ -52,6 +52,7 @@ short	get_vertex_nb_in_sector(short vertex, t_sector sector)
 	}
 	return (res);
 }
+
 void		reset_render_utils(t_camera *camera, t_env *env)
 {
 	int	i;
@@ -68,7 +69,7 @@ void		reset_render_utils(t_camera *camera, t_env *env)
 	i = 0;
 	while (i < max)
 	{
-		camera->xmin[i] = -1;
+		//camera->xmin[i] = -1;
 		camera->xmax[i] = -1;
 		camera->screen_sectors[i] = -1;
 		camera->rendered_sectors[i] = 0;
