@@ -1,0 +1,104 @@
+# .swp
+src/*.swp
+*.swp
+
+# maps
+maps/*.map
+*.map
+
+# textures
+images/textures/*.bmp
+*.bmp
+
+# fonts
+fonts
+
+#resources
+resources.tar.gz
+
+# Prerequisites
+*.d
+
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+
+# Linker output
+*.ilk
+*.exp
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+doom
+doom-nukem
+doom-editor
+./doom
+./doom-nukem
+./doom-editor
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Kernel Module Compile Results
+*.mod*
+*.cmd
+.tmp_versions/
+modules.order
+Module.symvers
+Mkfile.old
+dkms.conf
+*/*.DS_Store
+*.DS_Store
+
+#vscode config file
+.vscode/
+photoshop_sprite
+
+# Windows objects
+doom-nukem.exe.stackdump
+doom_editor.exe.stackdump
+*.stackdump
+
+# Perf log file
+benchmark.txt
+
+# Pre commit file
+done.txt
+test.c
+
+# Resources archive
+resources.tar.gz
+
+# Resources
+images/
+audio/
+fonts/
+maps/
+
+# Lib files
+lib/*

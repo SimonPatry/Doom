@@ -3,21 +3,21 @@
 /*                                                        :::      ::::::::   */
 /*   write_enemies.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sipatry <marvin@42.fr>                     +#+  +:+       +#+        */
+/*   By: lnicosia <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/09/06 12:01:37 by sipatry           #+#    #+#             */
-/*   Updated: 2020/01/30 11:09:18 by lnicosia         ###   ########.fr       */
+/*   Updated: 2020/05/01 12:10:59 by lnicosia         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "save.h"
 
-static int	get_main_sprite(int sprite, t_env *env)
+int			get_main_enemy_sprite(int sprite, t_env *env)
 {
 	int		i;
 
 	i = 0;
-	while (i < MAX_OBJECTS)
+	while (i < MAX_ENEMIES)
 	{
 		if (sprite == env->enemies_main_sprites[i])
 			return (i);
@@ -26,15 +26,23 @@ static int	get_main_sprite(int sprite, t_env *env)
 	return (i);
 }
 
-static void	write_enemy(int fd, t_enemies enemy, t_env *env)
+static void	write_enemy(int fd, t_enemy enemy, t_env *env)
 {
-	ft_dprintf(fd, "[%.f %.f %.f %.f] ",
-			enemy.pos.y, enemy.pos.x, enemy.pos.z, enemy.angle);
-	ft_dprintf(fd, "[%d %.f] ",
-			get_main_sprite(enemy.sprite, env), enemy.scale);
+	ft_dprintf(fd, "[%.*f %.*f %.*f %.*f] ",
+			ft_min(5, get_decimal_len(enemy.pos.y)),
+			enemy.pos.y,
+			ft_min(5, get_decimal_len(enemy.pos.x)),
+			enemy.pos.x,
+			ft_min(5, get_decimal_len(enemy.pos.z)),
+			enemy.pos.z,
+			ft_min(5, get_decimal_len(enemy.angle)),
+			enemy.angle);
+	ft_dprintf(fd, "[%d %.*f] ",
+			get_main_enemy_sprite(enemy.sprite, env),
+			ft_min(5, get_decimal_len(enemy.scale)),
+			enemy.scale);
 	ft_dprintf(fd, "[%d %d %d]\n",
 			enemy.map_hp, enemy.speed, enemy.damage);
-
 }
 
 void		write_enemies(int fd, t_env *env)

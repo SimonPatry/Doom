@@ -6,7 +6,7 @@
 /*   By: lnicosia <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/11/06 17:28:16 by lnicosia          #+#    #+#             */
-/*   Updated: 2020/01/31 15:01:17 by lnicosia         ###   ########.fr       */
+/*   Updated: 2020/04/28 17:09:31 by lnicosia         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ t_point	get_button_current_size(t_button b)
 	return (size);
 }
 
-int	is_mouse_on_button(t_button b, t_point mouse)
+int		is_mouse_on_button(t_button b, t_point mouse)
 {
 	t_point	size;
 
@@ -41,8 +41,8 @@ int	is_mouse_on_button(t_button b, t_point mouse)
 
 int		button_keyup(t_button *b, t_env *env)
 {
-	if ((!is_mouse_on_button(*b, new_point(env->sdl.mx, env->sdl.my))
-		|| b->anim_state != PRESSED))
+	if (!is_mouse_on_button(*b, new_point(env->sdl.mx, env->sdl.my))
+		|| b->anim_state != PRESSED)
 	{
 		b->anim_state = REST;
 		return (0);

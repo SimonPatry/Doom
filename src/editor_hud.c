@@ -3,52 +3,62 @@
 /*                                                        :::      ::::::::   */
 /*   editor_hud.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sipatry <sipatry@student.42.fr>            +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/29 15:44:44 by sipatry           #+#    #+#             */
-/*   Updated: 2020/01/31 18:38:09 by lnicosia         ###   ########.fr       */
+/*   Updated: 2020/05/15 21:35:02 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+#include "draw.h"
 #include "env.h"
 
-void	editor_hud(t_env *env)
+int		editor_hud2(t_env *env)
 {
-	if (!env->editor.in_game || (env->editor.in_game &&  env->editor.tab))
+	if (env->editor.creating_event)
 	{
-		if (env->editor.in_game)
+		if (env->editor.creating_condition)
 		{
-			draw_rectangle(env,
-			new_rectangle(0x00000000, 0xFF888888, 1, 5),
-			new_point(0 , 0),
-			new_point(400, 900));
+			if (draw_condition_panel(env))
+				return (-1);
 		}
-		draw_rectangle(env,
-				new_rectangle(0x00000000, 0xFF888888, 1, 5),
-				new_point(0 , 64),
-				new_point(400, 270));
-		draw_button(env, env->editor.add_enemy);
-		draw_button(env, env->editor.add_object);
-		draw_button(env, env->editor.texture_background);
-		draw_button(env, env->editor.enemy_background);
-		draw_button(env, env->editor.current_texture_selection);
-		draw_button(env, env->editor.current_enemy_selection);
-		draw_button(env, env->editor.change_mode);
-		draw_button(env, env->editor.launch_game);
-		draw_button(env, env->editor.save);
-		draw_rectangle(env,
-				new_rectangle(0x00000000, 0x2C3E50, 1, 5),
-				new_point(0 , 450),
-				new_point(400, 450));
-		draw_editor_tabs(env);
-		if (env->editor.draw_enemy_tab)
-			enemy_tab(env, MAX_ENEMIES);
-		if (env->editor.draw_sprite_tab)
-			sprite_selection(env, MAX_OBJECTS);
-		if (env->editor.draw_selection_tab || env->editor.draw_enemy_tab
-		|| env->editor.draw_sprite_tab)
-			env->editor.selection_tab = 1;
 		else
-			env->editor.selection_tab = 0;
+		{
+			if (draw_event_panel(env))
+				return (-1);
+		}
 	}
+	if (env->editor.selecting_weapon || env->editor.selecting_condition_weapon)
+	{
+		if (draw_weapon_picker(env))
+			return (-1);
+	}
+	return (0);
+}
+
+int		editor_hud(t_env *env)
+{
+	t_point	center;
+	t_point	size;
+
+	center = new_point(0, 0);
+	size = new_point(0, 0);
+	if (!env->editor.in_game || (env->editor.in_game && env->editor.tab))
+	{
+		draw_rectangle(env,
+			new_rectangle(0xbdc3c7, 0xbdc3c7, 1, 0),
+			new_point(0, 0),
+			new_point(400, 900));
+		if (!env->options.editor_options)
+		{
+			if (editor_options1(env, center, size))
+				return (-1);
+		}
+		else
+		{
+			if (editor_options_hud(env))
+				return (-1);
+		}
+	}
+	return (editor_hud2(env));
 }

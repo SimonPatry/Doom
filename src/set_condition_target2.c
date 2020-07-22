@@ -1,18 +1,19 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   set_condition_target2.c                                :+:      :+:    :+:   */
+/*   set_condition_target2.c                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: lnicosia <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/16 10:49:41 by lnicosia          #+#    #+#             */
-/*   Updated: 2020/01/28 11:04:47 by lnicosia         ###   ########.fr       */
+/*   Updated: 2020/02/25 18:37:01 by lnicosia         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "events_parser.h"
+#include "parser.h"
 
-void		*set_condition_target8(t_env *env, t_events_parser *eparser)
+void	*set_condition_target8(t_env *env, t_events_parser *eparser)
 {
 	if (eparser->condition_index == OBJECT_SPRITE)
 		return (&env->objects[eparser->condition_object].sprite);
@@ -31,7 +32,7 @@ void		*set_condition_target8(t_env *env, t_events_parser *eparser)
 	return (0);
 }
 
-void		*set_condition_target7(t_env *env, t_events_parser *eparser)
+void	*set_condition_target7(t_env *env, t_events_parser *eparser)
 {
 	if (eparser->condition_index == WEAPON_DAMAGE)
 		return (&env->weapons[eparser->condition_weapon].damage);
@@ -56,7 +57,7 @@ void		*set_condition_target7(t_env *env, t_events_parser *eparser)
 		return (set_condition_target8(env, eparser));
 }
 
-void		*set_condition_target6(t_env *env, t_events_parser *eparser)
+void	*set_condition_target6(t_env *env, t_events_parser *eparser)
 {
 	if (eparser->condition_index == PLAYER_X)
 		return (&env->player.pos.x);
@@ -80,7 +81,7 @@ void		*set_condition_target6(t_env *env, t_events_parser *eparser)
 		return (set_condition_target7(env, eparser));
 }
 
-void		*set_condition_target5(t_env *env, t_events_parser *eparser)
+void	*set_condition_target5(t_env *env, t_events_parser *eparser)
 {
 	if (eparser->condition_index == SECTOR_BRIGHTNESS)
 		return (&env->sectors[eparser->condition_sector].
@@ -100,7 +101,7 @@ void		*set_condition_target5(t_env *env, t_events_parser *eparser)
 		return (set_condition_target6(env, eparser));
 }
 
-void		*set_condition_target4(t_env *env, t_events_parser *eparser)
+void	*set_condition_target4(t_env *env, t_events_parser *eparser)
 {
 	if (eparser->condition_index == SECTOR_CEILING_SPRITES_SPRITE)
 		return (&env->sectors[eparser->condition_sector].

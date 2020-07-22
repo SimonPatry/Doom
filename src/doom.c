@@ -3,140 +3,117 @@
 /*                                                        :::      ::::::::   */
 /*   doom.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sipatry <sipatry@student.42.fr>            +#+  +:+       +#+        */
+/*   By: gaerhard <gaerhard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/11/13 17:39:16 by sipatry           #+#    #+#             */
-/*   Updated: 2020/02/03 14:59:14 by sipatry          ###   ########.fr       */
+/*   Updated: 2020/05/15 01:14:11 by gaerhard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "env.h"
+#include "free.h"
 #include "collision.h"
+#include "events.h"
+#include "enemies.h"
+#include "draw.h"
 
-int		launch_events(t_env *env)
+int		doom4(t_env *env)
 {
-	if (env->player.sector != -1
-			&& env->sectors[env->player.sector].stand_events
-			&& env->sectors[env->player.sector].nb_stand_events
-			&& !env->player.state.jump)
+	if (env->menu && !env->in_game && !env->option)
 	{
-		if (start_event(&env->sectors[env->player.sector].stand_events,
-					&env->sectors[env->player.sector].nb_stand_events, env))
-			return (-1);
+		if (start_game_menu(env))
+			return (custom_error("Start game menu error\n"));
 	}
-	if (env->global_events && env->nb_global_events && env->global_events)
+	else
 	{
-		if (start_event(&env->global_events,
-					&env->nb_global_events, env))
-			return (-1);
+		if (env->option)
+		{
+			if (option_menu_ig(env))
+				return (custom_error("Option menu in game error\n"));
+		}
+		else if (draw_game(env))
+			return (custom_error("Crash in game loop\n"));
 	}
-	if (env->wall_bullet_holes_events && env->nb_wall_bullet_holes_events
-			&& env->wall_bullet_holes_events)
+	return (0);
+}
+
+int		doom3(t_env *env)
+{
+	if (env->player.health <= 0)
 	{
-		if (start_event(&env->wall_bullet_holes_events,
-					&env->nb_wall_bullet_holes_events, env))
-			return (-1);
+		if (death(env))
+			return (custom_error("Crash from death\n"));
 	}
-	if (env->floor_bullet_holes_events && env->floor_bullet_holes_events
-			&& env->nb_floor_bullet_holes_events)
+	if (env->confirmation_box.state)
 	{
-		if (start_event(&env->floor_bullet_holes_events,
-					&env->nb_floor_bullet_holes_events, env))
-			return (-1);
+		if (confirmation_box_keys(&env->confirmation_box, env))
+			return (custom_error("Crash from a confirmation box\n"));
 	}
-	if (env->ceiling_bullet_holes_events && env->ceiling_bullet_holes_events
-			&& env->nb_ceiling_bullet_holes_events)
+	return (0);
+}
+
+int		doom_events(t_env *env)
+{
+	if (env->events)
 	{
-		if (start_event(&env->ceiling_bullet_holes_events,
-					&env->nb_ceiling_bullet_holes_events, env))
-			return (-1);
+		if (pop_events(env))
+			return (custom_error("Events failed\n"));
 	}
-	if (env->player.changed_sector)
+	if (launch_events(env))
+		return (custom_error("Events Failed\n"));
+	return (0);
+}
+
+int		doom2(t_env *env)
+{
+	update_sprites_state(env);
+	if (projectiles_movement(env))
+		return (custom_error("Projectile or impact creation failed\n"));
+	if (!env->confirmation_box.state)
 	{
-		if (env->player.sector != -1 && env->sectors[env->player.sector].nb_walk_in_events > 0)
-			start_event(&env->sectors[env->player.sector].walk_in_events, &env->sectors[env->player.sector].nb_walk_in_events, env);
-		if (env->player.old_sector != -1
-				&& env->sectors[env->player.old_sector].nb_walk_out_events > 0)
-			start_event(&env->sectors[env->player.old_sector].walk_out_events,
-					&env->sectors[env->player.old_sector].nb_walk_out_events, env);
-		env->player.changed_sector = 0;
-		env->player.old_sector = -1;
+		if (enemy_ai(env))
+			return (custom_error("Enemy ai error\n"));
+		objects_collision(env, env->player.pos);
+		if (explosion_collision_objects(env))
+			return (custom_error("Explosion collision objects error\n"));
+		if (explosion_collision_enemies(env))
+			return (custom_error("Explosion collision enmies error\n"));
+		if (explosion_collision_player(env))
+			return (custom_error("Explosion collision player error\n"));
+		if (enemy_melee_hit(env, -1))
+			return (custom_error("Collision with a melee enemy failed\n"));
+		if (player_combat_state(env))
+			return (custom_error("Updating player combat state failed\n"));
+		if (keys(env))
+			return (custom_error("Keys failed\n"));
 	}
+	if (doom_events(env))
+		return (custom_error("", env));
 	return (0);
 }
 
 int		doom(t_env *env)
 {
+	if (env->in_game && !env->menu && !env->option && first_frame(env))
+		return (crash("First frame failed\n", env));
 	while (env->running)
 	{
-		//env->player.health = 100;
 		reset_clipped(env);
 		clear_image(env);
 		SDL_GetRelativeMouseState(&env->sdl.mouse_x, &env->sdl.mouse_y);
 		SDL_GetMouseState(&env->sdl.mx, &env->sdl.my);
-		if (env->first_frame)
+		if (env->in_game && !env->menu & !env->option)
 		{
-			while (SDL_PollEvent(&env->sdl.event))
-			{
-				if (env->sdl.event.type == SDL_QUIT || (env->sdl.event.type == SDL_KEYUP && env->sdl.event.key.keysym.sym == SDLK_ESCAPE))
-					env->running = 0;
-				else if (env->sdl.event.type == SDL_KEYDOWN
-						|| env->sdl.event.type == SDL_KEYUP || env->sdl.event.type == SDL_MOUSEBUTTONDOWN
-						|| env->sdl.event.type == SDL_MOUSEBUTTONUP || env->sdl.event.type == SDL_MOUSEWHEEL)
-					update_inputs(env);
-				if (env->sdl.event.type == SDL_KEYUP
-					|| env->sdl.event.type == SDL_MOUSEBUTTONUP)
-				{
-					if (keyup(env))
-						return (-1);
-				}
-				if (env->sdl.event.type == SDL_MOUSEWHEEL && !env->weapon_change.on_going &&
-					!env->shot.on_going && env->player.health > 0)
-					weapon_change(env);
-			}
-			update_sprites_state(env);
-			if (projectiles_movement(env))
-				return (-1);
-			if (env->player.health > 0)
-			{
-				enemy_ai(env);
-				objects_collision(env, env->player.pos);
-				explosion_collision_objects(env);
-				explosion_collision_enemies(env);
-				explosion_collision_player(env);
-				enemy_melee_hit(env);
-				player_combat_state(env);
-				if (keys(env))
-					return (-1);
-			}
-			if (env->events)
-			{
-				if (pop_events(env))
-					return (-1);
-			}
-			if (launch_events(env))
-				return (-1);
-			if (env->player.health <= 0)
-				death(env);
-			if (env->confirmation_box.state)
-			{
-				if (confirmation_box_keys(&env->confirmation_box, env))
-					return (-1);
-			}
+			if (doom_poll_event(env))
+				return (crash("Doom events failed\n", env));
+			if (doom2(env))
+				return (crash("Doom part 2 failed\n", env));
+			if (doom3(env))
+				return (crash("Doom part 3 failed\n", env));
 		}
-		if (env->menu_start)
-			start_game_menu(env);
-		else
-		{
-			if (env->option)
-			{
-				if (open_options(env))
-					return (crash("Could not process options pannel\n", env));
-			}
-			else if (draw_game(env))
-				return (ft_printf("Crash in game loop\n"));
-		}
-		FMOD_System_Update(env->sound.system);
+		if (doom4(env))
+			return (crash("Doom part 4 failed\n", env));
+		if (FMOD_System_Update(env->sound.system) != FMOD_OK)
+			return (custom_error("FMOD_System_Update error\n"));
 	}
 	free_all(env);
 	return (0);

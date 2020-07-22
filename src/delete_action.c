@@ -3,67 +3,69 @@
 /*                                                        :::      ::::::::   */
 /*   delete_action.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sipatry <sipatry@student.42.fr>            +#+  +:+       +#+        */
+/*   By: lnicosia <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/11/08 17:44:43 by gaerhard          #+#    #+#             */
-/*   Updated: 2020/02/04 10:17:08 by lnicosia         ###   ########.fr       */
+/*   Updated: 2020/04/29 15:52:33 by lnicosia         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "env.h"
+#include "update_existing_events.h"
 
-void		delete_selected_sector(void *param)
+int		delete_action2(t_env *env)
 {
-	t_env	*env;
-	int	i;
-
-	env = (t_env *)param;
-	delete_sector(env, env->editor.selected_sector);
-	delete_invalid_sectors(env);
-	delete_invalid_vertices(env);
-	env->editor.selected_sector = -1;
-	clear_portals(env);
-	i = 0;
-	while (i < env->nb_sectors)
-	{
-		create_portals(env, env->sectors[i]);
-		i++;
-	}
-	env->player.sector = get_sector_global(env, env->player.pos);
-}
-
-int		delete_action(t_env *env)
-{
-	int	i;
-
 	if (env->editor.selected_vertex != -1
 			&& !current_vertices_contains(env, env->editor.selected_vertex))
 	{
-		i = 0;
-		delete_vertex(env, env->editor.selected_vertex);
-		delete_invalid_sectors(env);
-		delete_invalid_vertices(env);
-		env->editor.selected_vertex = -1;
-		clear_portals(env);
-		while (i < env->nb_sectors)
-		{
-			create_portals(env, env->sectors[i]);
-			i++;
-		}
+		if (update_confirmation_box(&env->confirmation_box,
+			"Delete the selected vertex?", YESNO, env))
+			return (-1);
+		env->confirmation_box.yes_action = &delete_selected_vertex;
+		env->confirmation_box.yes_target = env;
 	}
-	if (env->editor.selected_sector != -1 && !env->confirmation_box.state)
+	else if (env->editor.selected_sector != -1 && !env->confirmation_box.state)
 	{
 		if (update_confirmation_box(&env->confirmation_box,
 			"Delete the selected sector?", YESNO, env))
 			return (-1);
-		env->confirmation_box.yes_action = delete_selected_sector;
+		env->confirmation_box.yes_action = &delete_selected_sector;
 		env->confirmation_box.yes_target = env;
 	}
-	if (env->selected_object != -1)
+	else if (env->selected_ceiling_sprite != -1)
 	{
-		delete_object(env, env->selected_object);
-		env->selected_object = -1;
+		if (delete_ceiling_sprite(env))
+			return (-1);
 	}
 	env->inputs.del = 0;
+	return (0);
+}
+
+int		delete_action(t_env *env)
+{
+	if (env->selected_object != -1)
+	{
+		if (delete_object(env))
+			return (-1);
+		env->selected_object = -1;
+	}
+	else if (env->selected_enemy != -1)
+	{
+		if (delete_enemy(env))
+			return (-1);
+		env->selected_enemy = -1;
+	}
+	else if (env->selected_wall_sprite_wall != -1)
+	{
+		if (delete_wall_sprite(env))
+			return (-1);
+	}
+	else if (env->selected_floor_sprite != -1)
+	{
+		if (delete_floor_sprite(env))
+			return (-1);
+	}
+	else
+		return (delete_action2(env));
 	return (0);
 }

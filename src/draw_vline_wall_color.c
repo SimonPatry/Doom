@@ -3,128 +3,56 @@
 /*                                                        :::      ::::::::   */
 /*   draw_vline_wall_color.c                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lnicosia <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: sipatry <sipatry@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2019/11/28 17:44:32 by lnicosia          #+#    #+#             */
-/*   Updated: 2020/01/06 17:05:33 by lnicosia         ###   ########.fr       */
+/*   Created: 2019/11/28 17:43:23 by lnicosia          #+#    #+#             */
+/*   Updated: 2020/03/11 19:13:20 by sipatry          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "render.h"
 
-/*
- **	Draw a vertical vline on the screen at vline.x
- */
-
-void	draw_vline_wall_color(t_sector sector, t_vline vline, t_render render, t_env *env)
+void	put_wall_pixel_color(t_drawer *drawer, t_render *render, t_env *env)
 {
-	int			i;
-	double		yalpha;
-	double		y;
-	double		x;
-	Uint32		*pixels;
 	Uint32		*texture_pixels;
-	double		*zbuffer;
-	int			coord;
 
-	pixels = env->sdl.texture_pixels;
-	if (env->options.show_minimap)
-	{
-		//ft_printf("{cyan}[WALL]{reset}\n");
-		render.map_lvl = get_current_wall_map(render.texture, render.z, &render, env);
-	}
-	texture_pixels = env->wall_textures[render.texture].maps[render.map_lvl]->pixels;
-	zbuffer = env->zbuffer;
-	yalpha = 0;
-	coord = 0;
-	x = 0;
-	y = 0;
-	/*y = render.alpha
-		* render.camera->v[render.sector][render.i].texture_scale.x * render.z
-		+ sector.align[render.i].x;
-	if (y != y)
+	texture_pixels =
+	env->wall_textures[render->texture].maps[render->map_lvl]->pixels;
+	env->sdl.texture_pixels[drawer->coord] =
+	apply_light_color(texture_pixels[(int)drawer->x + render->texture_w
+	* (int)drawer->y], drawer->sector->light_color, drawer->sector->intensity);
+	if (env->editor.in_game && drawer->sector->selected[render->i]
+		&& !env->editor.select && !env->editor.select_portal)
+		env->sdl.texture_pixels[drawer->coord] =
+		blend_alpha(env->sdl.texture_pixels[drawer->coord], 0x1ABC9C, 128);
+	env->zbuffer[drawer->coord] = render->z;
+}
+
+/*
+**	Draw a vertical vline on the screen at vline.x
+*/
+
+void	draw_vline_wall_color(t_sector *sector, t_vline vline,
+		t_render *render, t_env *env)
+{
+	t_drawer	drawer;
+
+	drawer.sector = sector;
+	drawer.vline = vline;
+	if (get_wall_x(&drawer, render, env))
 		return ;
-	while (y >= render.texture_h)
-		y -= render.texture_h;
-	while (y < 0)
-		y += render.texture_h;
-	y = ft_fclamp(y, 0, render.texture_h);*/
-	x = render.alpha
-		* render.camera->v[render.sector][render.i]
-		.texture_scale[render.map_lvl].x * render.z
-		- render.camera->v[render.sector][render.i]
-		.texture_align[render.map_lvl].x;
-	if (x != x)
-		return ;
-	/*while (x >= render.texture_w)
-		x -= render.texture_w;
-	while (x < 0)
-		x += render.texture_w;*/
-	if (x >= render.texture_w || x < 0)
-		x = ft_abs((int)x % render.texture_w);
-	x = ft_fclamp(x, 0, render.texture_w);
-	i = vline.start;
-	//ft_printf("map lvl = %d\n", render.map_lvl);
-	//ft_printf("texture_w = %d\n", render.texture_w);
-	//ft_printf("texture_h = %d\n", render.texture_h);
-	//ft_printf("first pixel = 0x%X\n", texture_pixels[0]);
-	//ft_printf("x = %d\n", (int)x);
-	while (i < vline.end)
+	while (drawer.i < drawer.vline.end)
 	{
-		coord = vline.x + env->w * i;
-		if (render.z >= zbuffer[coord])
+		drawer.coord = drawer.vline.x + env->w * drawer.i;
+		if (render->z >= env->zbuffer[drawer.coord])
 		{
-			i++;
+			drawer.i++;
 			continue;
 		}
-		if (vline.x == env->h_w && i == env->h_h)
-		{
-			if (env->editor.select)
-			{
-				reset_selection(env);
-				env->editor.selected_sector = sector.num;
-				env->editor.selected_wall = render.i;
-				env->selected_wall1
-				= env->sectors[render.sector].vertices[render.i];
-				env->selected_wall2
-				= env->sectors[render.sector].vertices[render.i + 1];
-			}
-			if (env->playing)
-			{
-				env->hovered_wall_sprite_wall = -1;
-				env->hovered_wall_sprite_sprite = -1;
-				env->hovered_wall_sprite_sector = -1;
-			}
-		}
-		yalpha = (i - render.no_slope_current_ceiling) / render.line_height;
-		/*x = yalpha * render.camera->v[render.sector][render.i].texture_scale.y
-			+ sector.align[render.i].y;
-		while (x >= render.texture_w)
-			x -= render.texture_w;
-		while (x < 0)
-			x += render.texture_w;*/
-		y = yalpha * render.camera->v[render.sector][render.i]
-		.texture_scale[render.map_lvl].y
-		- render.camera->v[render.sector][render.i]
-		.texture_align[render.map_lvl].y;
-		/*while (y >= render.texture_h)
-			y -= render.texture_h;
-		while (y < 0)
-			y += render.texture_h;*/
-		if (y >= render.texture_h || y < 0)
-			y = ft_abs((int)y % render.texture_h);
-		//ft_printf("y = %d\n", (int)y);
-			pixels[coord] = apply_light_color(texture_pixels[(int)x
-			+ render.texture_w * (int)y], sector.light_color, sector.intensity);
-		if (env->editor.in_game && sector.selected[render.i] && !env->editor.select)
-			pixels[coord] = blend_alpha(pixels[coord], 0x1ABC9C, 128);
-		zbuffer[coord] = render.z;
-		if (env->options.zbuffer || env->options.contouring)
-			if (i == (int)(render.max_ceiling)
-					|| i == (int)(render.neighbor_max_ceiling)
-					|| i == (int)(render.max_floor)
-					|| i == (int)(render.neighbor_max_floor))
-				pixels[coord] = 0xFFFF0000;
-		i++;
+		click_on_wall(&drawer, render, env);
+		if (get_wall_y(&drawer, render))
+			return ;
+		put_wall_pixel_color(&drawer, render, env);
+		drawer.i++;
 	}
 }
