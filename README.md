@@ -1,5 +1,3 @@
-Doom-Nukem
-
 42 projet Doom-Nukem
 
 This project had for objective to create a game based on Doom and Duke-nukem (two games from the 90s).
