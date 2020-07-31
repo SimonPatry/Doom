@@ -14,5 +14,3 @@ editor:
 ![](docs/height_slope_texture.gif)
 
 ![](docs/input_boxes.gif)
-
-Created by  Lnicosia, gaerhard, sipatry.
