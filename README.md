@@ -7,6 +7,10 @@ gameplay:
 
 ![](docs/doom_main.gif)
 
+![](docs/objects.gif)
+
+![](docs/door.gif)
+
 editor:
 
 ![](docs/editor_2D_3D.gif)
