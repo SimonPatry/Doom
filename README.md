@@ -5,6 +5,8 @@ But we had to do it following some conditions: the project had to be in C (and o
 
 gameplay:
 
+https://www.youtube.com/watch?v=qHFw4_NmulA&t=33s
+
 ![](docs/doom_main.gif)
 
 ![](docs/objects.gif)
@@ -12,6 +14,8 @@ gameplay:
 ![](docs/door.gif)
 
 editor:
+
+https://www.youtube.com/watch?v=AtxenRiuVxg&feature=youtu.be
 
 ![](docs/editor_2D_3D.gif)
 
